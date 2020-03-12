@@ -19,17 +19,8 @@ import { SpellID } from "../structs/SpellID";
 interface SpellsKnownScreenProps {}
 
 const SpellsKnownScreen = (props: SpellsKnownScreenProps) => {
-  const [filterBoxVisible, setFilterBoxVisibility] = useState(true);
-  const [filteredSpellIDs, setFilteredSpellIDs] = useState<Array<SpellID>>([
-    { id: "0" },
-    { id: "0" },
-    { id: "0" },
-    { id: "0" },
-    { id: "0" },
-    { id: "0" },
-    { id: "0" },
-    { id: "0" }
-  ]);
+  const [filterBoxVisible, setFilterBoxVisibility] = useState(false);
+  const [filteredSpellIDs, setFilteredSpellIDs] = useState<Array<SpellID>>([]);
 
   return (
     <View style={[AppStyles.appBackground, styles.container]}>

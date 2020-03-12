@@ -7,6 +7,9 @@ import SpellsKnownScreen from "./screens/SpellsKnownScreen";
 import SpellInfoScreen from "./screens/SpellInfoScreen";
 import SpellListScreen from "./screens/SpellListScreen";
 
+import { NavigationContainer, TabActions } from "@react-navigation/native";
+import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
+
 export default function App() {
   const spellLists: Array<SpellList> = [
     {
@@ -58,12 +61,21 @@ export default function App() {
     "https://raw.githubusercontent.com/aurorabuilder/elements/master/core.index"
   ];
 
+  const Tab = createBottomTabNavigator();
+
+  const SourcesScreen = () => (
+    <SpellSourcesScreen spellSources={spellSources} />
+  );
+  const ListsScreen = () => <SpellListsScreen spellLists={spellLists} />;
+  const KnownScreen = () => <SpellsKnownScreen />;
+
   return (
-    <>
-      {/*<SpellListsScreen spellLists={spellLists} />*/}
-      <SpellSourcesScreen spellSources={spellSources} />
-      {/*<SpellsKnownScreen />*/}
-      {/*<SpellListScreen list={spellLists[0]} />*/}
-    </>
+    <NavigationContainer>
+      <Tab.Navigator>
+        <Tab.Screen name="Sources" component={SourcesScreen} />
+        <Tab.Screen name="Spells" component={ListsScreen} />
+        <Tab.Screen name="Search" component={KnownScreen} />
+      </Tab.Navigator>
+    </NavigationContainer>
   );
 }
