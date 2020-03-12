@@ -34,7 +34,7 @@ const AppStyles = StyleSheet.create({
     marginRight: 10
   },
   headerContainer: {
-    height: 150,
+    height: 120,
     paddingHorizontal: 20,
     paddingTop: 30,
     paddingBottom: 20

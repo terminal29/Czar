@@ -42,7 +42,8 @@ const styles = StyleSheet.create({
     backgroundColor: "#fff"
   },
   headerContainer: {
-    flexDirection: "row"
+    flexDirection: "row",
+    height: 150
   },
   headerTextContainer: {
     flex: 1
