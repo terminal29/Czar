@@ -2,7 +2,7 @@ import { StyleSheet } from "react-native";
 
 const AppStyles = StyleSheet.create({
   appBackground: {
-    backgroundColor: "#1D1D1D"
+    backgroundColor: "#101010"
   },
   boxBackground: {
     backgroundColor: "#2A2A2A"
@@ -43,6 +43,9 @@ const AppStyles = StyleSheet.create({
     color: "#E8E8E8",
     fontSize: 15,
     fontFamily: "Sen-Regular"
+  },
+  edgePadding: {
+    paddingHorizontal: 20
   }
 });
 

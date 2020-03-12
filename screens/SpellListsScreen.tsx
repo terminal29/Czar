@@ -17,14 +17,15 @@ const SpellListsScreen = (props: SpellListsScreenProps) => {
           Manage your characters' spells
         </Text>
       </View>
-
-      <ScrollView>
-        <View style={styles.spellListsScroll}>
-          {props.spellLists.map(spellList => (
-            <SpellListItemCompact list={spellList} />
-          ))}
-        </View>
-      </ScrollView>
+      <View style={[AppStyles.edgePadding]}>
+        <ScrollView>
+          <View style={styles.spellListsScroll}>
+            {props.spellLists.map(spellList => (
+              <SpellListItemCompact list={spellList} />
+            ))}
+          </View>
+        </ScrollView>
+      </View>
     </View>
   );
 };

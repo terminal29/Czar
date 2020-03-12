@@ -19,12 +19,13 @@ const SpellListScreen = (props: SpellListScreenProps) => {
           <Image style={styles.listImage} source={{ uri: "" }} />
         </View>
       </View>
-
-      <ScrollView>
-        {props.list.spellIDs.map(spellID => (
-          <SpellItemCompact key={spellID.id} spellID={spellID} />
-        ))}
-      </ScrollView>
+      <View style={AppStyles.edgePadding}>
+        <ScrollView>
+          {props.list.spellIDs.map(spellID => (
+            <SpellItemCompact key={spellID.id} spellID={spellID} />
+          ))}
+        </ScrollView>
+      </View>
     </View>
   );
 };

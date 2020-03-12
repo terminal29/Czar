@@ -49,13 +49,19 @@ export default function App() {
   ];
 
   const spellSources = [
+    "https://raw.githubusercontent.com/aurorabuilder/elements/master/core.index",
+    "https://raw.githubusercontent.com/aurorabuilder/elements/master/core.index",
+    "https://raw.githubusercontent.com/aurorabuilder/elements/master/core.index",
+    "https://raw.githubusercontent.com/aurorabuilder/elements/master/core.index",
+    "https://raw.githubusercontent.com/aurorabuilder/elements/master/core.index",
+    "https://raw.githubusercontent.com/aurorabuilder/elements/master/core.index",
     "https://raw.githubusercontent.com/aurorabuilder/elements/master/core.index"
   ];
 
   return (
     <>
-      <SpellListsScreen spellLists={spellLists} />
-      {/*<SpellSourcesScreen spellSources={spellSources} />*/}
+      {/*<SpellListsScreen spellLists={spellLists} />*/}
+      <SpellSourcesScreen spellSources={spellSources} />
       {/*<SpellsKnownScreen />*/}
       {/*<SpellListScreen list={spellLists[0]} />*/}
     </>
