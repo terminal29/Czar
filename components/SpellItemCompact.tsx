@@ -4,13 +4,19 @@ import { SpellID } from "../structs/SpellID";
 import { AppStyles } from "../styles/AppStyles";
 
 interface SpellItemCompactProps {
+  style?: any;
   spellID: SpellID;
 }
 
 const SpellItemCompact = (props: SpellItemCompactProps) => {
   return (
     <View
-      style={[styles.container, AppStyles.boxBackground, AppStyles.boxRounded]}
+      style={[
+        styles.container,
+        AppStyles.boxBackground,
+        AppStyles.boxRounded,
+        props.style
+      ]}
     >
       <Text style={AppStyles.smallHeaderText}>Absorb Elements</Text>
       <View style={styles.subHeaderContainer}>
@@ -44,8 +50,6 @@ export default SpellItemCompact;
 
 const styles = StyleSheet.create({
   container: {
-    marginHorizontal: 20,
-    marginVertical: 10,
     paddingHorizontal: 20,
     paddingVertical: 16,
     paddingTop: 12

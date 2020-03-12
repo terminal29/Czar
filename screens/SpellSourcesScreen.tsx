@@ -57,7 +57,7 @@ const SpellSourcesScreen = (props: SpellSourcesScreenProps) => {
             />
           </View>
         </View>
-        <ScrollView style={props.sourceScroll}>
+        <ScrollView>
           {props.spellSources.map(spellSource => (
             <SpellSourceItem sourceURL={spellSource} />
           ))}

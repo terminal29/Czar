@@ -46,6 +46,11 @@ const AppStyles = StyleSheet.create({
   },
   edgePadding: {
     paddingHorizontal: 20
+  },
+  inputPlaceholder: {
+    fontSize: 15,
+    color: "#A7A7A7",
+    fontFamily: "Sen-Regular"
   }
 });
 
