@@ -12,7 +12,14 @@ export default function App() {
     {
       name: "Wizzo the Wizard",
       thumbnailURL: "",
-      spellIDs: [{ id: "1212" }, { id: "2121" }]
+      spellIDs: [
+        { id: "1212" },
+        { id: "2121" },
+        { id: "1212" },
+        { id: "2121" },
+        { id: "1212" },
+        { id: "2121" }
+      ]
     },
     {
       name: "Clarence the Cleric",
@@ -47,10 +54,10 @@ export default function App() {
 
   return (
     <>
-      {/*<SpellListsScreen spellLists={spellLists}/>*/}
+      <SpellListsScreen spellLists={spellLists} />
       {/*<SpellSourcesScreen spellSources={spellSources} />*/}
       {/*<SpellsKnownScreen />*/}
-      <SpellListScreen list={spellLists[0]} />
+      {/*<SpellListScreen list={spellLists[0]} />*/}
     </>
   );
 }
