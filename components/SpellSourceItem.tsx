@@ -4,13 +4,19 @@ import { AppStyles } from "../styles/AppStyles";
 import Icon from "react-native-vector-icons/Ionicons";
 
 interface SpellSourceItemProps {
+  style?: any;
   sourceURL: string;
 }
 
 const SpellSourceItem = (props: SpellSourceItemProps) => {
   return (
     <View
-      style={[AppStyles.boxBackground, AppStyles.boxRounded, styles.container]}
+      style={[
+        AppStyles.boxBackground,
+        AppStyles.boxRounded,
+        styles.container,
+        props.style
+      ]}
     >
       <View style={styles.sourceURL}>
         <Text style={[AppStyles.headerSubtext, { flex: 0 }]}>
@@ -32,9 +38,7 @@ export default SpellSourceItem;
 
 const styles = StyleSheet.create({
   container: {
-    flexDirection: "row",
-    marginTop: 10,
-    marginBottom: 20
+    flexDirection: "row"
   },
   sourceURL: {
     flex: 1,

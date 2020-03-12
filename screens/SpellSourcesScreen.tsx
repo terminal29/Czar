@@ -7,7 +7,8 @@ import {
   TextInput,
   KeyboardAvoidingView,
   Keyboard,
-  ScrollView
+  ScrollView,
+  TouchableOpacity
 } from "react-native";
 import { AppStyles } from "../styles/AppStyles";
 import SpellSourceItem from "../components/SpellSourceItem";
@@ -25,19 +26,20 @@ const SpellSourcesScreen = (props: SpellSourcesScreenProps) => {
         <Text style={[AppStyles.headerSubtext]}>Manage your spell sources</Text>
       </View>
       <View style={[AppStyles.edgePadding, styles.container]}>
-        <View
-          style={[
-            AppStyles.boxBackground,
-            AppStyles.boxRounded,
-            styles.reloadButton
-          ]}
-        >
-          <Text style={AppStyles.smallHeaderSubtext}>
-            Re-download Spell Data
-          </Text>
-          <Text style={AppStyles.infoText}>Updated 2/2/2020</Text>
-        </View>
-
+        <TouchableOpacity>
+          <View
+            style={[
+              AppStyles.boxBackground,
+              AppStyles.boxRounded,
+              styles.reloadButton
+            ]}
+          >
+            <Text style={AppStyles.smallHeaderSubtext}>
+              Re-download Spell Data
+            </Text>
+            <Text style={AppStyles.infoText}>Updated 2/2/2020</Text>
+          </View>
+        </TouchableOpacity>
         <View
           style={[
             AppStyles.boxRounded,
@@ -59,7 +61,10 @@ const SpellSourcesScreen = (props: SpellSourcesScreenProps) => {
         </View>
         <ScrollView>
           {props.spellSources.map(spellSource => (
-            <SpellSourceItem sourceURL={spellSource} />
+            <SpellSourceItem
+              sourceURL={spellSource}
+              style={styles.sourceItem}
+            />
           ))}
         </ScrollView>
       </View>
@@ -99,5 +104,9 @@ const styles = StyleSheet.create({
   sourceAddButtonPlus: { fontSize: 40 },
   sourceScroll: {
     flex: 1
+  },
+  sourceItem: {
+    marginTop: 10,
+    marginBottom: 20
   }
 });

@@ -2,7 +2,7 @@ import { StyleSheet } from "react-native";
 
 const AppStyles = StyleSheet.create({
   appBackground: {
-    backgroundColor: "#101010"
+    backgroundColor: "#1D1D1D"
   },
   boxBackground: {
     backgroundColor: "#2A2A2A"

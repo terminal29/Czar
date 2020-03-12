@@ -61,8 +61,8 @@ export default function App() {
   return (
     <>
       {/*<SpellListsScreen spellLists={spellLists} />*/}
-      {/*<SpellSourcesScreen spellSources={spellSources} />*/}
-      <SpellsKnownScreen />
+      <SpellSourcesScreen spellSources={spellSources} />
+      {/*<SpellsKnownScreen />*/}
       {/*<SpellListScreen list={spellLists[0]} />*/}
     </>
   );

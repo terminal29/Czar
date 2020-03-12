@@ -19,10 +19,14 @@ const SpellListScreen = (props: SpellListScreenProps) => {
           <Image style={styles.listImage} source={{ uri: "" }} />
         </View>
       </View>
-      <View style={AppStyles.edgePadding}>
+      <View style={[AppStyles.edgePadding, styles.container]}>
         <ScrollView>
           {props.list.spellIDs.map(spellID => (
-            <SpellItemCompact key={spellID.id} spellID={spellID} />
+            <SpellItemCompact
+              key={spellID.id}
+              spellID={spellID}
+              style={styles.spellItem}
+            />
           ))}
         </ScrollView>
       </View>
@@ -51,5 +55,9 @@ const styles = StyleSheet.create({
   },
   headerImageContainer: {
     flex: 0
+  },
+  spellItem: {
+    marginTop: 10,
+    marginBottom: 20
   }
 });
