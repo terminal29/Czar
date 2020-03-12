@@ -1,11 +1,12 @@
 import * as React from "react";
-import { Text, View, StyleSheet } from "react-native";
+import { Text, View, StyleSheet, TouchableOpacity } from "react-native";
 import { AppStyles } from "../styles/AppStyles";
 import Icon from "react-native-vector-icons/Ionicons";
 
 interface SpellSourceItemProps {
   style?: any;
   sourceURL: string;
+  onRemoveButtonPressed?: Function;
 }
 
 const SpellSourceItem = (props: SpellSourceItemProps) => {
@@ -23,13 +24,19 @@ const SpellSourceItem = (props: SpellSourceItemProps) => {
           {props.sourceURL}
         </Text>
       </View>
-      <View style={styles.sourceDeleteButton}>
+      <TouchableOpacity
+        style={styles.sourceDeleteButton}
+        onPress={() =>
+          props.onRemoveButtonPressed &&
+          props.onRemoveButtonPressed(props.sourceURL)
+        }
+      >
         <Icon
           style={[AppStyles.headerSubtext, styles.sourceDeleteButtonX]}
           name={"ios-close"}
           size={40}
         />
-      </View>
+      </TouchableOpacity>
     </View>
   );
 };

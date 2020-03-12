@@ -22,8 +22,10 @@
     "react-native-unimodules": "~0.7.0",
     "react-native-vector-icons": "^6.6.0",
     "react-native-web": "~0.11.7",
+    "react-native-xml2js": "^1.0.3",
     "react-navigation": "^4.2.2",
-    "react-navigation-stack": "^2.2.3"
+    "react-navigation-stack": "^2.2.3",
+    "xml2js": "^0.4.23"
   },
   "devDependencies": {
     "@babel/core": "~7.6.0",

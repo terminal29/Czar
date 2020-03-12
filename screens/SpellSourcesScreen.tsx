@@ -13,12 +13,19 @@ import {
 import { AppStyles } from "../styles/AppStyles";
 import SpellSourceItem from "../components/SpellSourceItem";
 import Icon from "react-native-vector-icons/Ionicons";
+import { useState } from "react";
 
 interface SpellSourcesScreenProps {
   spellSources: string[];
+  onSpellSourceRemoved?: Function;
+  onSpellSourceAdded?: Function;
+  onSpellSourcesReloaded?: Function;
+  isLoading: boolean;
+  loadingButtonText: string;
 }
 
 const SpellSourcesScreen = (props: SpellSourcesScreenProps) => {
+  const [addBoxText, setAddBoxText] = useState("");
   return (
     <View style={[AppStyles.appBackground, styles.container]}>
       <View style={[AppStyles.headerContainer]}>
@@ -26,7 +33,12 @@ const SpellSourcesScreen = (props: SpellSourcesScreenProps) => {
         <Text style={[AppStyles.headerSubtext]}>Manage your spell sources</Text>
       </View>
       <View style={[AppStyles.edgePadding, styles.container]}>
-        <TouchableOpacity>
+        <TouchableOpacity
+          onPress={() =>
+            props.onSpellSourcesReloaded && props.onSpellSourcesReloaded()
+          }
+          disabled={props.isLoading}
+        >
           <View
             style={[
               AppStyles.boxBackground,
@@ -35,7 +47,9 @@ const SpellSourcesScreen = (props: SpellSourcesScreenProps) => {
             ]}
           >
             <Text style={AppStyles.smallHeaderSubtext}>
-              Re-download Spell Data
+              {props.isLoading
+                ? props.loadingButtonText
+                : "Re-download Spell Data"}
             </Text>
             <Text style={AppStyles.infoText}>Updated 2/2/2020</Text>
           </View>
@@ -44,8 +58,12 @@ const SpellSourcesScreen = (props: SpellSourcesScreenProps) => {
         <ScrollView>
           {props.spellSources.map(spellSource => (
             <SpellSourceItem
+              key={spellSource}
               sourceURL={spellSource}
               style={styles.sourceItem}
+              onRemoveButtonPressed={url =>
+                props.onSpellSourceRemoved && props.onSpellSourceRemoved(url)
+              }
             />
           ))}
           <View
@@ -58,14 +76,21 @@ const SpellSourcesScreen = (props: SpellSourcesScreenProps) => {
             <TextInput
               multiline={true}
               style={[AppStyles.headerSubtext, styles.sourceInput]}
-            ></TextInput>
-            <View style={styles.sourceAddButton}>
+              onChangeText={text => setAddBoxText(text)}
+              value={addBoxText}
+            />
+            <TouchableOpacity
+              style={styles.sourceAddButton}
+              onPress={() =>
+                props.onSpellSourceAdded && props.onSpellSourceAdded(addBoxText)
+              }
+            >
               <Icon
                 style={[AppStyles.headerSubtext, styles.sourceAddButtonPlus]}
                 name={"ios-add"}
                 size={40}
               />
-            </View>
+            </TouchableOpacity>
           </View>
         </ScrollView>
       </View>
