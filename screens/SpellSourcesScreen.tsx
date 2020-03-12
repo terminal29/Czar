@@ -40,25 +40,7 @@ const SpellSourcesScreen = (props: SpellSourcesScreenProps) => {
             <Text style={AppStyles.infoText}>Updated 2/2/2020</Text>
           </View>
         </TouchableOpacity>
-        <View
-          style={[
-            AppStyles.boxRounded,
-            styles.boxBorder,
-            styles.addButtonContainer
-          ]}
-        >
-          <TextInput
-            multiline={true}
-            style={[AppStyles.headerSubtext, styles.sourceInput]}
-          ></TextInput>
-          <View style={styles.sourceAddButton}>
-            <Icon
-              style={[AppStyles.headerSubtext, styles.sourceAddButtonPlus]}
-              name={"ios-add"}
-              size={40}
-            />
-          </View>
-        </View>
+
         <ScrollView>
           {props.spellSources.map(spellSource => (
             <SpellSourceItem
@@ -66,6 +48,25 @@ const SpellSourcesScreen = (props: SpellSourcesScreenProps) => {
               style={styles.sourceItem}
             />
           ))}
+          <View
+            style={[
+              AppStyles.boxRounded,
+              styles.boxBorder,
+              styles.addButtonContainer
+            ]}
+          >
+            <TextInput
+              multiline={true}
+              style={[AppStyles.headerSubtext, styles.sourceInput]}
+            ></TextInput>
+            <View style={styles.sourceAddButton}>
+              <Icon
+                style={[AppStyles.headerSubtext, styles.sourceAddButtonPlus]}
+                name={"ios-add"}
+                size={40}
+              />
+            </View>
+          </View>
         </ScrollView>
       </View>
     </View>
