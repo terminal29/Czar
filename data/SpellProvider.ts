@@ -9,8 +9,14 @@ export default class SpellProvider {
   private static spellSourcesDBName = "spell_sources_";
 
   private static numSpells: number = 0;
+
+  private static classListListeners: Function[] = [];
   private static classList: string[] = [];
+
+  private static schoolListListeners: Function[] = [];
   private static schoolList: string[] = [];
+
+  private static levelListListeners: Function[] = [];
   private static levelList: string[] = [];
 
   public static async clearStoredSpells() {}
@@ -117,6 +123,8 @@ export default class SpellProvider {
 
       await Promise.all(storagePromises);
 
+      await SpellProvider.updateSpellDataFromStorage();
+
       ToastAndroid.show(
         `Loaded ${allSpells.length} spells successfully!`,
         ToastAndroid.SHORT
@@ -126,41 +134,45 @@ export default class SpellProvider {
     }
   }
 
-  public static async loadSpellDataFromStorage() {
+  public static async updateSpellDataFromStorage() {
     const ids = await SpellProvider.getSpellIDs();
-    const spells = await AsyncStorage.multiGet(ids.map(id => id.id));
+    const spells = [];
+    const spellPromises = ids.map(id =>
+      SpellProvider.getSpellByID(id).then(spell => spells.push(spell))
+    );
+    await Promise.all(spellPromises);
     SpellProvider.numSpells = spells.length;
     SpellProvider.classList = [];
     SpellProvider.levelList = [];
     SpellProvider.schoolList = [];
     const actionPromises = [];
-    spells.forEach(spellID => {
-      actionPromises.push(
-        SpellProvider.getSpellByID(new SpellID(spellID[1])).then(spell => {
-          // Add all new spell classes
-          spell.classes.forEach(spellClass => {
-            if (
-              SpellProvider.classList.findIndex(v => v === spellClass) === -1
-            ) {
-              SpellProvider.classList.push(spellClass);
-            }
-          });
-          // Add all new spell levels
-          if (
-            SpellProvider.levelList.findIndex(v => v === spell.level) === -1
-          ) {
-            SpellProvider.levelList.push(spell.level);
-          }
+    spells.forEach(spell => {
+      spell.classes.forEach(spellClass => {
+        if (SpellProvider.classList.findIndex(v => v === spellClass) === -1) {
+          SpellProvider.classList.push(spellClass);
+        }
+      });
+      // Add all new spell levels
+      if (SpellProvider.levelList.findIndex(v => v === spell.level) === -1) {
+        SpellProvider.levelList.push(spell.level);
+      }
 
-          // Add all new spell schools
-          if (
-            SpellProvider.schoolList.findIndex(v => v === spell.school) === -1
-          ) {
-            SpellProvider.schoolList.push(spell.school);
-          }
-        })
-      );
+      // Add all new spell schools
+      if (SpellProvider.schoolList.findIndex(v => v === spell.school) === -1) {
+        SpellProvider.schoolList.push(spell.school);
+      }
     });
+
+    SpellProvider.classListListeners.forEach(listener =>
+      listener(SpellProvider.classList)
+    );
+    SpellProvider.levelListListeners.forEach(listener =>
+      listener(SpellProvider.levelList)
+    );
+    SpellProvider.schoolListListeners.forEach(listener =>
+      listener(SpellProvider.schoolList)
+    );
+
     return await Promise.all(actionPromises);
   }
 
@@ -180,22 +192,44 @@ export default class SpellProvider {
     return (await AsyncStorage.multiGet(sourceKeys)).map(s => s[1]);
   }
 
-  public static getClasses(): string[] {
-    return SpellProvider.classList;
+  public static observeClassList(callback: Function) {
+    callback(SpellProvider.classList);
+    SpellProvider.classListListeners.push(callback);
   }
 
-  public static getSchools(): string[] {
-    return SpellProvider.schoolList;
+  public static observeSchoolList(callback: Function) {
+    callback(SpellProvider.schoolList);
+    SpellProvider.schoolListListeners.push(callback);
   }
 
-  public static getLevels(): string[] {
-    return SpellProvider.levelList;
+  public static observeLevelList(callback: Function) {
+    callback(SpellProvider.levelList);
+    SpellProvider.levelListListeners.push(callback);
+  }
+
+  public static unObserveClassList(callback: Function) {
+    SpellProvider.classListListeners = SpellProvider.classListListeners.filter(
+      c => c !== callback
+    );
+  }
+
+  public static unObserveSchoolList(callback: Function) {
+    SpellProvider.schoolListListeners = SpellProvider.schoolListListeners.filter(
+      c => c !== callback
+    );
+  }
+
+  public static unObserveLevelList(callback: Function) {
+    SpellProvider.levelListListeners = SpellProvider.levelListListeners.filter(
+      c => c !== callback
+    );
   }
 
   public static async getSpellByID(id: SpellID): Promise<Spell> {
-    return JSON.parse(
-      await AsyncStorage.getItem(SpellProvider.spellDBName + id)
-    ) as Spell;
+    const spellText = await AsyncStorage.getItem(
+      SpellProvider.spellDBName + id.id
+    );
+    return JSON.parse(spellText) as Spell;
   }
 
   public static async getSpellIDs(): Promise<SpellID[]> {

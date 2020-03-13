@@ -61,6 +61,7 @@ export default function App() {
 
   useEffect(() => {
     updateSourceURLs();
+    SpellProvider.updateSpellDataFromStorage();
   }, []);
 
   const Tab = createBottomTabNavigator();
@@ -140,6 +141,7 @@ export default function App() {
           showLabel: false,
           style: { ...styles.tabBar }
         }}
+        initialRouteName={"Search"}
       >
         <Tab.Screen name="Sources" component={SourcesScreen} />
         <Tab.Screen name="Spells" component={ListsScreen} />

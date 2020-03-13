@@ -11,16 +11,46 @@ import {
 } from "react-native";
 import { AppStyles } from "../styles/AppStyles";
 import Icon from "react-native-vector-icons/MaterialIcons";
-import { useState } from "react";
+import { useState, useCallback, useEffect } from "react";
 import SpellProvider from "../data/SpellProvider";
 import SpellItemCompact from "../components/SpellItemCompact";
 import { SpellID } from "../structs/SpellID";
+import { useFocusEffect } from "@react-navigation/native";
 
 interface SpellsKnownScreenProps {}
 
 const SpellsKnownScreen = (props: SpellsKnownScreenProps) => {
   const [filterBoxVisible, setFilterBoxVisibility] = useState(false);
   const [filteredSpellIDs, setFilteredSpellIDs] = useState<Array<SpellID>>([]);
+
+  const [spellClasses, setSpellClasses] = useState([]);
+  const [selectedSpellClass, setSelectedSpellClass] = useState(0);
+
+  const [spellLevels, setSpellLevels] = useState([]);
+  const [selectedSpellLevel, setSelectedSpellLevel] = useState(0);
+
+  const [spellSchools, setSpellSchools] = useState([]);
+  const [selectedSpellSchool, setSelectedSpellSchool] = useState(0);
+
+  const updateClassList = (classList: Array<string>) =>
+    setSpellClasses(classList.sort());
+  const updateLevelList = (levelList: Array<string>) =>
+    setSpellLevels(levelList.sort());
+  const updateSchoolList = (schoolList: Array<string>) =>
+    setSpellSchools(schoolList.sort());
+
+  useEffect(() => {
+    SpellProvider.observeClassList(updateClassList);
+    SpellProvider.observeLevelList(updateLevelList);
+    SpellProvider.observeSchoolList(updateSchoolList);
+    return () => {
+      SpellProvider.unObserveClassList(updateClassList);
+      SpellProvider.unObserveLevelList(updateLevelList);
+      SpellProvider.unObserveSchoolList(updateSchoolList);
+    };
+  }, []);
+
+  useFocusEffect(() => {});
 
   return (
     <View style={[AppStyles.appBackground, styles.container]}>
@@ -83,12 +113,18 @@ const SpellsKnownScreen = (props: SpellsKnownScreenProps) => {
                       styles.subSearchBoxItemPicker
                     ]}
                     itemStyle={[styles.subSearchBoxItemPickerItem]}
+                    selectedValue={selectedSpellClass}
+                    onValueChange={value => setSelectedSpellClass(value)}
                   >
-                    {SpellProvider.getClasses().length == 0 ? (
+                    {spellClasses.length == 0 ? (
                       <Picker.Item label={"No classes available"} value="" />
                     ) : (
-                      SpellProvider.getClasses().map(spellLevel => (
-                        <Picker.Item label={spellLevel} value={spellLevel} />
+                      spellClasses.map(spellClass => (
+                        <Picker.Item
+                          key={spellClass}
+                          label={spellClass}
+                          value={spellClass}
+                        />
                       ))
                     )}
                   </Picker>
@@ -110,11 +146,15 @@ const SpellsKnownScreen = (props: SpellsKnownScreenProps) => {
                     ]}
                     itemStyle={[styles.subSearchBoxItemPickerItem]}
                   >
-                    {SpellProvider.getSchools().length == 0 ? (
-                      <Picker.Item label={"No schools available"} value="" />
+                    {spellSchools.length == 0 ? (
+                      <Picker.Item label={"No classes available"} value="" />
                     ) : (
-                      SpellProvider.getSchools().map(spellClass => (
-                        <Picker.Item label={spellClass} value={spellClass} />
+                      spellSchools.map(spellSchool => (
+                        <Picker.Item
+                          key={spellSchool}
+                          label={spellSchool}
+                          value={spellSchool}
+                        />
                       ))
                     )}
                   </Picker>
@@ -136,11 +176,15 @@ const SpellsKnownScreen = (props: SpellsKnownScreenProps) => {
                     ]}
                     itemStyle={[styles.subSearchBoxItemPickerItem]}
                   >
-                    {SpellProvider.getLevels().length == 0 ? (
+                    {spellLevels.length == 0 ? (
                       <Picker.Item label={"No levels available"} value="" />
                     ) : (
-                      SpellProvider.getLevels().map(spellLevel => (
-                        <Picker.Item label={spellLevel} value={spellLevel} />
+                      spellLevels.map(spellLevel => (
+                        <Picker.Item
+                          key={spellLevel}
+                          label={spellLevel}
+                          value={spellLevel}
+                        />
                       ))
                     )}
                   </Picker>
