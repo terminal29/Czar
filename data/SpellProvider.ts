@@ -1,6 +1,7 @@
 import { Spell } from "../structs/Spell";
 import { SpellID } from "../structs/SpellID";
-import { AsyncStorage, ToastAndroid } from "react-native";
+import { ToastAndroid } from "react-native";
+import AsyncStorage from "@react-native-community/async-storage";
 import * as xml2js from "react-native-xml2js";
 
 export default class SpellProvider {
@@ -14,11 +15,12 @@ export default class SpellProvider {
 
   public static async clearStoredSpells() {}
 
-  public static async downloadSpellsFromSources(onStageChanged?) {
+  public static async downloadSpellsFromSources() {
     const getSpells = async (url: string) => {
       const spells = [];
       const loadXML = async (url: string) => {
         const response = await fetch(url);
+
         const text = await response.text();
         const xml = await new Promise((resolve, reject) => {
           const parser = new xml2js.Parser();
@@ -87,15 +89,12 @@ export default class SpellProvider {
     try {
       const spellPromises = [];
       const allSpells: Array<Spell> = [];
-      onStageChanged && onStageChanged("Collecting source URLs");
       const urls = await SpellProvider.getSourceURLs();
 
-      onStageChanged && onStageChanged("Downloading spells");
       for (let url of urls) {
         spellPromises.push(
           getSpells(url)
             .then(spells => {
-              onStageChanged && onStageChanged("Parsing spells");
               return spells.map(spell => parseSpell(spell));
             })
             .then(spells => allSpells.push(...spells))
@@ -107,7 +106,6 @@ export default class SpellProvider {
 
       await Promise.all(spellPromises);
       const storagePromises = [];
-      onStageChanged && onStageChanged("Storing spells");
       for (let spell of allSpells) {
         storagePromises.push(
           AsyncStorage.setItem(
@@ -119,7 +117,6 @@ export default class SpellProvider {
 
       await Promise.all(storagePromises);
 
-      onStageChanged && onStageChanged("Finished");
       ToastAndroid.show(
         `Loaded ${allSpells.length} spells successfully!`,
         ToastAndroid.SHORT

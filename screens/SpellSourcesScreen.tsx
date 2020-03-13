@@ -21,7 +21,7 @@ interface SpellSourcesScreenProps {
   onSpellSourceAdded?: Function;
   onSpellSourcesReloaded?: Function;
   isLoading: boolean;
-  loadingButtonText: string;
+  loadingButtonComponent: any;
 }
 
 const SpellSourcesScreen = (props: SpellSourcesScreenProps) => {
@@ -46,12 +46,15 @@ const SpellSourcesScreen = (props: SpellSourcesScreenProps) => {
               styles.reloadButton
             ]}
           >
-            <Text style={AppStyles.smallHeaderSubtext}>
-              {props.isLoading
-                ? props.loadingButtonText
-                : "Re-download Spell Data"}
-            </Text>
-            <Text style={AppStyles.infoText}>Updated 2/2/2020</Text>
+            {props.isLoading ? (
+              props.loadingButtonComponent
+            ) : (
+              <>
+                <Text style={AppStyles.smallHeaderSubtext}>
+                  Re-download Spell Data
+                </Text>
+              </>
+            )}
           </View>
         </TouchableOpacity>
 
@@ -64,6 +67,7 @@ const SpellSourcesScreen = (props: SpellSourcesScreenProps) => {
               onRemoveButtonPressed={url =>
                 props.onSpellSourceRemoved && props.onSpellSourceRemoved(url)
               }
+              disabled={props.isLoading}
             />
           ))}
           <View
@@ -84,9 +88,14 @@ const SpellSourcesScreen = (props: SpellSourcesScreenProps) => {
               onPress={() =>
                 props.onSpellSourceAdded && props.onSpellSourceAdded(addBoxText)
               }
+              disabled={props.isLoading}
             >
               <Icon
-                style={[AppStyles.headerSubtext, styles.sourceAddButtonPlus]}
+                style={[
+                  AppStyles.headerSubtext,
+                  styles.sourceAddButtonPlus,
+                  props.isLoading && styles.sourceAddButtonPlusDisabled
+                ]}
                 name={"ios-add"}
                 size={40}
               />
@@ -128,6 +137,7 @@ const styles = StyleSheet.create({
     paddingRight: 20
   },
   sourceAddButtonPlus: { fontSize: 40 },
+  sourceAddButtonPlusDisabled: { color: "#a0a0a0" },
   sourceScroll: {
     flex: 1
   },

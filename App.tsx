@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useReducer } from "react";
 import { StyleSheet, Text, View } from "react-native";
 import SpellListsScreen from "./screens/SpellListsScreen";
 import { SpellList } from "./structs/SpellList";
@@ -6,7 +6,7 @@ import SpellSourcesScreen from "./screens/SpellSourcesScreen";
 import SpellsKnownScreen from "./screens/SpellsKnownScreen";
 import SpellInfoScreen from "./screens/SpellInfoScreen";
 import SpellListScreen from "./screens/SpellListScreen";
-
+import Spinner from "react-native-spinkit";
 import { NavigationContainer, TabActions } from "@react-navigation/native";
 import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
 import { AppStyles } from "./styles/AppStyles";
@@ -55,25 +55,22 @@ export default function App() {
 
   const [spellSources, setSpellSources] = useState([]);
   const [spellsLoading, setSpellsLoading] = useState(false);
-  const [loadingStage, setLoadingStage] = useState("");
-
-  useEffect(() => {
-    SpellProvider.getSourceURLs().then(urls => setSpellSources(urls));
-  }, []);
-
-  const Tab = createBottomTabNavigator();
 
   const updateSourceURLs = () =>
     SpellProvider.getSourceURLs().then(urls => setSpellSources(urls));
+
+  useEffect(() => {
+    updateSourceURLs();
+  }, []);
+
+  const Tab = createBottomTabNavigator();
 
   const SourcesScreen = () => (
     <SpellSourcesScreen
       spellSources={spellSources}
       onSpellSourcesReloaded={() => {
         setSpellsLoading(true);
-        SpellProvider.downloadSpellsFromSources(stage => {
-          setLoadingStage(stage);
-        })
+        SpellProvider.downloadSpellsFromSources()
           .then(() => {
             updateSourceURLs();
             setSpellsLoading(false);
@@ -93,7 +90,16 @@ export default function App() {
           .catch(err => alert(err))
       }
       isLoading={spellsLoading}
-      loadingButtonText={loadingStage}
+      loadingButtonComponent={
+        <Text
+          style={[
+            AppStyles.smallHeaderSubtext,
+            spellsLoading && styles.spellLoadingButton
+          ]}
+        >
+          Downloading...
+        </Text>
+      }
     />
   );
   const ListsScreen = () => <SpellListsScreen spellLists={spellLists} />;
@@ -112,7 +118,19 @@ export default function App() {
                   focused && styles.tabBarTextHighlight
                 ]}
               >
-                {route.name}
+                {route.name === "Sources" && spellsLoading ? (
+                  <Spinner
+                    color={
+                      focused
+                        ? styles.tabBarTextHighlight.color
+                        : AppStyles.smallHeaderText.color
+                    }
+                    size={25}
+                    type={"Wave"}
+                  />
+                ) : (
+                  route.name
+                )}
               </Text>
             );
           }
@@ -141,5 +159,8 @@ const styles = StyleSheet.create({
   },
   tabBarTextHighlight: {
     color: "white"
+  },
+  spellLoadingButton: {
+    color: "#a0a0a0"
   }
 });

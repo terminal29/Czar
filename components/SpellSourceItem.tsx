@@ -7,6 +7,7 @@ interface SpellSourceItemProps {
   style?: any;
   sourceURL: string;
   onRemoveButtonPressed?: Function;
+  disabled: boolean;
 }
 
 const SpellSourceItem = (props: SpellSourceItemProps) => {
@@ -30,9 +31,14 @@ const SpellSourceItem = (props: SpellSourceItemProps) => {
           props.onRemoveButtonPressed &&
           props.onRemoveButtonPressed(props.sourceURL)
         }
+        disabled={props.disabled}
       >
         <Icon
-          style={[AppStyles.headerSubtext, styles.sourceDeleteButtonX]}
+          style={[
+            AppStyles.headerSubtext,
+            styles.sourceDeleteButtonX,
+            props.disabled && styles.sourceDeleteButtonXDisabled
+          ]}
           name={"ios-close"}
           size={40}
         />
@@ -57,5 +63,6 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     paddingRight: 20
   },
-  sourceDeleteButtonX: { fontSize: 40 }
+  sourceDeleteButtonX: { fontSize: 40 },
+  sourceDeleteButtonXDisabled: { color: "#a0a0a0" }
 });
