@@ -1,8 +1,17 @@
 import { Spell } from "../structs/Spell";
 import { SpellID } from "../structs/SpellID";
-import { ToastAndroid } from "react-native";
 import AsyncStorage from "@react-native-community/async-storage";
 import * as xml2js from "react-native-xml2js";
+import nextFrame from "next-frame";
+import Toast from "react-native-root-toast";
+
+function nextFrameParams(p) {
+  return new Promise(function(resolve, reject) {
+    requestAnimationFrame(function() {
+      resolve(p);
+    });
+  });
+}
 
 export default class SpellProvider {
   private static spellDBName = "spells_full_";
@@ -22,39 +31,43 @@ export default class SpellProvider {
   public static async clearStoredSpells() {}
 
   public static async downloadSpellsFromSources() {
-    const getSpells = async (url: string) => {
-      const spells = [];
-      const loadXML = async (url: string) => {
-        const response = await fetch(url);
+    SpellProvider.classList = [];
+    SpellProvider.levelList = [];
+    SpellProvider.schoolList = [];
+    SpellProvider.notifyListeners();
 
-        const text = await response.text();
-        const xml = await new Promise((resolve, reject) => {
-          const parser = new xml2js.Parser();
-          parser.parseString(text, (err, result) => {
-            if (err) {
-              reject(err);
+    const getIndexFiles = async (url: string) => {
+      return fetch(url)
+        .then(async response => {
+          console.log(`Fetching ${url}`);
+          await nextFrame();
+          return response.text();
+        })
+        .then(
+          text =>
+            new Promise(async (resolve, reject) => {
+              await nextFrame();
+              const parser = new xml2js.Parser();
+              parser.parseString(text, (err, xml) => {
+                if (err) {
+                  reject(err);
+                }
+                resolve(xml);
+              });
+            })
+        )
+        .then(async xml => {
+          const urls: any = [{ url, xml }];
+          if (xml["index"]) {
+            for (let fileList of xml["index"]["files"]) {
+              for (let file of fileList["file"]) {
+                await nextFrame();
+                urls.push(await getIndexFiles(file["$"]["url"]));
+              }
             }
-            resolve(result);
-          });
+          }
+          return urls;
         });
-
-        if (xml["index"]) {
-          let promises = [];
-          for (let fileList of xml["index"]["files"]) {
-            for (let file of fileList["file"]) {
-              promises.push(loadXML(file["$"]["url"]));
-            }
-          }
-          await Promise.all(promises);
-        } else if (xml["elements"]) {
-          for (let element of xml["elements"]["element"]) {
-            if (element["$"]["type"] == "Spell") spells.push(element);
-          }
-        }
-      };
-
-      await loadXML(url);
-      return spells;
     };
 
     const builder = new xml2js.Builder();
@@ -92,46 +105,75 @@ export default class SpellProvider {
       return spell;
     };
 
+    Toast.show("Gathering source files...", {
+      duration: Toast.durations.SHORT,
+      position: Toast.positions.BOTTOM
+    });
     try {
-      const spellPromises = [];
-      const allSpells: Array<Spell> = [];
-      const urls = await SpellProvider.getSourceURLs();
+      const providedUrls = await SpellProvider.getSourceURLs();
+      const allUrls = (
+        await Promise.all(
+          providedUrls.map(async url => await getIndexFiles(url))
+        )
+      ).flat(Infinity);
+      Toast.show(`Parsing spells...`, {
+        duration: Toast.durations.SHORT,
+        position: Toast.positions.BOTTOM
+      });
 
-      for (let url of urls) {
-        spellPromises.push(
-          getSpells(url)
-            .then(spells => {
-              return spells.map(spell => parseSpell(spell));
-            })
-            .then(spells => allSpells.push(...spells))
-            .catch(e => {
-              throw Error(`${url} threw ${e.message}`);
-            })
-        );
+      const allSpells = [];
+      for (const url of allUrls) {
+        if (url.xml["elements"]) {
+          for (let element of url.xml["elements"]["element"]) {
+            if (element["$"]["type"] == "Spell") {
+              const spell = parseSpell(element);
+              allSpells.push([
+                SpellProvider.spellDBName + spell.id,
+                JSON.stringify(spell)
+              ]);
+              await nextFrame();
+            }
+          }
+        }
       }
 
-      await Promise.all(spellPromises);
-      const storagePromises = [];
-      for (let spell of allSpells) {
-        storagePromises.push(
-          AsyncStorage.setItem(
-            SpellProvider.spellDBName + spell.id,
-            JSON.stringify(spell)
-          )
+      Toast.show(`Saving spells...`, {
+        duration: Toast.durations.SHORT,
+        position: Toast.positions.BOTTOM
+      });
+      let idx = 0;
+      let step = 10;
+      while (idx < allSpells.length) {
+        await nextFrame();
+        await AsyncStorage.multiSet(
+          allSpells.slice(idx, Math.min(idx + step, allSpells.length))
         );
+        idx += step;
       }
-
-      await Promise.all(storagePromises);
 
       await SpellProvider.updateSpellDataFromStorage();
 
-      ToastAndroid.show(
-        `Loaded ${allSpells.length} spells successfully!`,
-        ToastAndroid.SHORT
-      );
+      console.dir(allSpells[0]);
+
+      Toast.show(`Loaded ${allSpells.length} spells`, {
+        duration: Toast.durations.SHORT,
+        position: Toast.positions.BOTTOM
+      });
     } catch (e) {
-      alert(`Failed to load spells: ${e.message}`);
+      Toast.show(e);
     }
+  }
+
+  private static notifyListeners() {
+    SpellProvider.classListListeners.forEach(listener =>
+      listener(SpellProvider.classList)
+    );
+    SpellProvider.levelListListeners.forEach(listener =>
+      listener(SpellProvider.levelList)
+    );
+    SpellProvider.schoolListListeners.forEach(listener =>
+      listener(SpellProvider.schoolList)
+    );
   }
 
   public static async updateSpellDataFromStorage() {
@@ -145,7 +187,6 @@ export default class SpellProvider {
     SpellProvider.classList = [];
     SpellProvider.levelList = [];
     SpellProvider.schoolList = [];
-    const actionPromises = [];
     spells.forEach(spell => {
       spell.classes.forEach(spellClass => {
         if (SpellProvider.classList.findIndex(v => v === spellClass) === -1) {
@@ -162,18 +203,7 @@ export default class SpellProvider {
         SpellProvider.schoolList.push(spell.school);
       }
     });
-
-    SpellProvider.classListListeners.forEach(listener =>
-      listener(SpellProvider.classList)
-    );
-    SpellProvider.levelListListeners.forEach(listener =>
-      listener(SpellProvider.levelList)
-    );
-    SpellProvider.schoolListListeners.forEach(listener =>
-      listener(SpellProvider.schoolList)
-    );
-
-    return await Promise.all(actionPromises);
+    SpellProvider.notifyListeners();
   }
 
   public static async addSource(url: string) {

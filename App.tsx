@@ -141,7 +141,7 @@ export default function App() {
           showLabel: false,
           style: { ...styles.tabBar }
         }}
-        initialRouteName={"Search"}
+        initialRouteName={"Sources"}
       >
         <Tab.Screen name="Sources" component={SourcesScreen} />
         <Tab.Screen name="Spells" component={ListsScreen} />
