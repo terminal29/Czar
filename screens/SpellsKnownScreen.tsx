@@ -23,14 +23,40 @@ const SpellsKnownScreen = (props: SpellsKnownScreenProps) => {
   const [filterBoxVisible, setFilterBoxVisibility] = useState(false);
   const [filteredSpellIDs, setFilteredSpellIDs] = useState<Array<SpellID>>([]);
 
+  const [spellName, setSpellName] = useState("");
+
   const [spellClasses, setSpellClasses] = useState([]);
-  const [selectedSpellClass, setSelectedSpellClass] = useState(0);
+  const [selectedSpellClass, setSelectedSpellClass] = useState("any");
 
   const [spellLevels, setSpellLevels] = useState([]);
-  const [selectedSpellLevel, setSelectedSpellLevel] = useState(0);
+  const [selectedSpellLevel, setSelectedSpellLevel] = useState("any");
 
   const [spellSchools, setSpellSchools] = useState([]);
-  const [selectedSpellSchool, setSelectedSpellSchool] = useState(0);
+  const [selectedSpellSchool, setSelectedSpellSchool] = useState("any");
+
+  useEffect(() => {
+    let cancelled = false;
+    const getSpells = async () => {
+      const rawFilteredSpellIDs = await SpellProvider.getSpellIDsByFilters(
+        spellName,
+        selectedSpellClass !== "any" ? [selectedSpellClass] : [],
+        selectedSpellSchool !== "any" ? [selectedSpellSchool] : [],
+        selectedSpellLevel !== "any" ? [selectedSpellLevel] : []
+      );
+      if (!cancelled) {
+        setFilteredSpellIDs(rawFilteredSpellIDs);
+      }
+    };
+
+    getSpells();
+    return () => {
+      cancelled = true;
+    };
+  }, [spellName, selectedSpellClass, selectedSpellLevel, selectedSpellSchool]);
+
+  useEffect(() => {
+    console.dir({ filteredSpellIDs });
+  }, [filteredSpellIDs]);
 
   const updateClassList = (classList: Array<string>) =>
     setSpellClasses(classList.sort());
@@ -120,7 +146,7 @@ const SpellsKnownScreen = (props: SpellsKnownScreenProps) => {
                       <Picker.Item label={"No classes available"} value="" />
                     ) : (
                       [
-                        <Picker.Item label={"Any"} value="" />,
+                        <Picker.Item key={"any"} label={"Any"} value="" />,
                         ...spellClasses.map(spellClass => (
                           <Picker.Item
                             key={spellClass}
@@ -148,17 +174,22 @@ const SpellsKnownScreen = (props: SpellsKnownScreenProps) => {
                       styles.subSearchBoxItemPicker
                     ]}
                     itemStyle={[styles.subSearchBoxItemPickerItem]}
+                    selectedValue={selectedSpellSchool}
+                    onValueChange={value => setSelectedSpellSchool(value)}
                   >
                     {spellSchools.length == 0 ? (
                       <Picker.Item label={"No classes available"} value="" />
                     ) : (
-                      spellSchools.map(spellSchool => (
-                        <Picker.Item
-                          key={spellSchool}
-                          label={spellSchool}
-                          value={spellSchool}
-                        />
-                      ))
+                      [
+                        <Picker.Item key={"any"} label={"Any"} value="" />,
+                        ...spellSchools.map(spellSchool => (
+                          <Picker.Item
+                            key={spellSchool}
+                            label={spellSchool}
+                            value={spellSchool}
+                          />
+                        ))
+                      ]
                     )}
                   </Picker>
                 </View>
@@ -178,17 +209,22 @@ const SpellsKnownScreen = (props: SpellsKnownScreenProps) => {
                       styles.subSearchBoxItemPicker
                     ]}
                     itemStyle={[styles.subSearchBoxItemPickerItem]}
+                    selectedValue={selectedSpellLevel}
+                    onValueChange={value => setSelectedSpellLevel(value)}
                   >
                     {spellLevels.length == 0 ? (
                       <Picker.Item label={"No levels available"} value="" />
                     ) : (
-                      spellLevels.map(spellLevel => (
-                        <Picker.Item
-                          key={spellLevel}
-                          label={spellLevel}
-                          value={spellLevel}
-                        />
-                      ))
+                      [
+                        <Picker.Item key={"any"} label={"Any"} value="" />,
+                        ...spellLevels.map(spellLevel => (
+                          <Picker.Item
+                            key={spellLevel}
+                            label={spellLevel}
+                            value={spellLevel}
+                          />
+                        ))
+                      ]
                     )}
                   </Picker>
                 </View>

@@ -5,14 +5,6 @@ import * as xml2js from "react-native-xml2js";
 import nextFrame from "next-frame";
 import Toast from "react-native-root-toast";
 
-function nextFrameParams(p) {
-  return new Promise(function(resolve, reject) {
-    requestAnimationFrame(function() {
-      resolve(p);
-    });
-  });
-}
-
 export default class SpellProvider {
   private static spellDBName = "spells_full_";
   private static spellSourcesDBName = "spell_sources_";
@@ -273,10 +265,43 @@ export default class SpellProvider {
   }
 
   public static async getSpellIDsByFilters(
+    name: string,
     classes: string[],
     schools: string[],
     levels: string[]
   ): Promise<SpellID[]> {
-    return [];
+    console.dir({ name, classes, schools, levels });
+    const ids = await SpellProvider.getSpellIDs();
+    const validIDs = [];
+    for (const spellID of ids) {
+      await nextFrame();
+      const spell = await SpellProvider.getSpellByID(spellID);
+      if (
+        name &&
+        !spell.name.toLocaleLowerCase().search(name.toLocaleLowerCase())
+      ) {
+        continue;
+      }
+      if (
+        classes.length > 0 &&
+        !spell.classes.every(spellClass => classes.indexOf(spellClass) >= 0)
+      ) {
+        continue;
+      }
+      if (
+        schools.length > 0 &&
+        !schools.every(spellSchool => spell.school === spellSchool)
+      ) {
+        continue;
+      }
+      if (
+        levels.length > 0 &&
+        !levels.every(spellLevel => spell.level === spellLevel)
+      ) {
+        continue;
+      }
+      validIDs.push(spellID);
+    }
+    return validIDs;
   }
 }

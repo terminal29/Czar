@@ -2,6 +2,9 @@ import * as React from "react";
 import { Text, View, StyleSheet } from "react-native";
 import { SpellID } from "../structs/SpellID";
 import { AppStyles } from "../styles/AppStyles";
+import { useState, useEffect } from "react";
+import SpellProvider from "../data/SpellProvider";
+import { Spell } from "../structs/Spell";
 
 interface SpellItemCompactProps {
   style?: any;
@@ -9,6 +12,23 @@ interface SpellItemCompactProps {
 }
 
 const SpellItemCompact = (props: SpellItemCompactProps) => {
+  const [spellInfo, setSpellInfo] = useState<Spell | null>();
+
+  useEffect(() => {
+    let cancelled = false;
+    const getSpell = async () => {
+      const spellInfoPromise = await SpellProvider.getSpellByID(props.spellID);
+      if (!cancelled) {
+        setSpellInfo(spellInfoPromise);
+      }
+    };
+    getSpell();
+
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
   return (
     <View
       style={[
@@ -18,30 +38,55 @@ const SpellItemCompact = (props: SpellItemCompactProps) => {
         props.style
       ]}
     >
-      <Text style={AppStyles.smallHeaderText}>Absorb Elements</Text>
-      <View style={styles.subHeaderContainer}>
-        <View style={AppStyles.smallRightMargin}>
-          <Text style={AppStyles.smallHeaderSubtext}>Cantrip</Text>
-        </View>
-        <View style={AppStyles.smallRightMargin}>
-          <Text style={AppStyles.smallHeaderSubtext}>Reaction</Text>
-        </View>
-
-        <View style={AppStyles.smallRightMargin}>
-          <Text style={AppStyles.smallHeaderSubtext}>VS</Text>
-        </View>
-
-        <View style={AppStyles.smallRightMargin}>
-          <Text style={AppStyles.smallHeaderSubtext}>Self</Text>
-        </View>
-      </View>
-      <View style={styles.infoContainer}>
-        <Text numberOfLines={3} ellipsizeMode="tail" style={AppStyles.infoText}>
-          The spell captures some of the incoming energy, lessening its effect
-          on you and storing it for your next melee attack. You have resistance
-          to the
-        </Text>
-      </View>
+      {!spellInfo ? (
+        <Text style={AppStyles.smallHeaderText}>Loading...</Text>
+      ) : (
+        <>
+          <Text style={AppStyles.smallHeaderText}>{spellInfo.name}</Text>
+          <View style={styles.subHeaderContainer}>
+            <View style={AppStyles.smallRightMargin}>
+              <Text style={AppStyles.smallHeaderSubtext}>
+                {spellInfo.level == "0"
+                  ? "Cantrip"
+                  : `Level ${spellInfo.level}`}
+              </Text>
+            </View>
+            <View style={AppStyles.smallRightMargin}>
+              <Text style={AppStyles.smallHeaderSubtext}>-</Text>
+            </View>
+            <View style={AppStyles.smallRightMargin}>
+              <Text style={AppStyles.smallHeaderSubtext}>{spellInfo.time}</Text>
+            </View>
+            <View style={AppStyles.smallRightMargin}>
+              <Text style={AppStyles.smallHeaderSubtext}>-</Text>
+            </View>
+            <View style={AppStyles.smallRightMargin}>
+              <Text style={AppStyles.smallHeaderSubtext}>
+                {spellInfo.hasVerbalComponent && "V"}
+                {spellInfo.hasSomaticComponent && "S"}
+                {spellInfo.hasMaterialComponent && "M"}
+              </Text>
+            </View>
+            <View style={AppStyles.smallRightMargin}>
+              <Text style={AppStyles.smallHeaderSubtext}>-</Text>
+            </View>
+            <View style={AppStyles.smallRightMargin}>
+              <Text style={AppStyles.smallHeaderSubtext}>
+                {spellInfo.range}
+              </Text>
+            </View>
+          </View>
+          <View style={styles.infoContainer}>
+            <Text
+              numberOfLines={3}
+              ellipsizeMode="tail"
+              style={AppStyles.infoText}
+            >
+              {spellInfo.formattedText}
+            </Text>
+          </View>
+        </>
+      )}
     </View>
   );
 };
