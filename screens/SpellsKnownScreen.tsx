@@ -119,13 +119,16 @@ const SpellsKnownScreen = (props: SpellsKnownScreenProps) => {
                     {spellClasses.length == 0 ? (
                       <Picker.Item label={"No classes available"} value="" />
                     ) : (
-                      spellClasses.map(spellClass => (
-                        <Picker.Item
-                          key={spellClass}
-                          label={spellClass}
-                          value={spellClass}
-                        />
-                      ))
+                      [
+                        <Picker.Item label={"Any"} value="" />,
+                        ...spellClasses.map(spellClass => (
+                          <Picker.Item
+                            key={spellClass}
+                            label={spellClass}
+                            value={spellClass}
+                          />
+                        ))
+                      ]
                     )}
                   </Picker>
                 </View>

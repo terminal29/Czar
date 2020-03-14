@@ -13,6 +13,7 @@
     "@react-navigation/native": "^5.0.9",
     "async-mutex": "^0.1.4",
     "expo": "~36.0.0",
+    "next-frame": "^0.2.3",
     "react": "~16.9.0",
     "react-dom": "~16.9.0",
     "react-native": "~0.61.4",
