@@ -16,7 +16,7 @@ import Icon from "react-native-vector-icons/Ionicons";
 import { useState } from "react";
 
 interface SpellSourcesScreenProps {
-  spellSources: string[];
+  spellSources: { id: number; url: string }[];
   onSpellSourceRemoved?: Function;
   onSpellSourceAdded?: Function;
   onSpellSourcesReloaded?: Function;
@@ -61,8 +61,8 @@ const SpellSourcesScreen = (props: SpellSourcesScreenProps) => {
         <ScrollView>
           {props.spellSources.map(spellSource => (
             <SpellSourceItem
-              key={spellSource}
-              sourceURL={spellSource}
+              key={spellSource.id}
+              sourceURL={spellSource.url}
               style={styles.sourceItem}
               onRemoveButtonPressed={url =>
                 props.onSpellSourceRemoved && props.onSpellSourceRemoved(url)

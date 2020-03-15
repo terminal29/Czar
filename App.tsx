@@ -71,24 +71,18 @@ export default function App() {
       spellSources={spellSources}
       onSpellSourcesReloaded={() => {
         setSpellsLoading(true);
-        SpellProvider.downloadSpellsFromSources()
-          .then(() => {
-            updateSourceURLs();
-            setSpellsLoading(false);
-          })
-          .catch(err => alert(err));
+        SpellProvider.downloadSpellsFromSources().then(() => {
+          updateSourceURLs();
+          setSpellsLoading(false);
+        });
       }}
       onSpellSourceAdded={sourceURL =>
         !spellsLoading &&
-        SpellProvider.addSource(sourceURL)
-          .then(updateSourceURLs)
-          .catch(err => alert(err))
+        SpellProvider.addSource(sourceURL).then(updateSourceURLs)
       }
       onSpellSourceRemoved={sourceURL =>
         !spellsLoading &&
-        SpellProvider.removeSource(sourceURL)
-          .then(updateSourceURLs)
-          .catch(err => alert(err))
+        SpellProvider.removeSource(sourceURL).then(updateSourceURLs)
       }
       isLoading={spellsLoading}
       loadingButtonComponent={

@@ -16,6 +16,7 @@ import SpellProvider from "../data/SpellProvider";
 import SpellItemCompact from "../components/SpellItemCompact";
 import { SpellID } from "../structs/SpellID";
 import { useFocusEffect } from "@react-navigation/native";
+import nextFrame from "next-frame";
 
 interface SpellsKnownScreenProps {}
 
@@ -36,16 +37,32 @@ const SpellsKnownScreen = (props: SpellsKnownScreenProps) => {
 
   useEffect(() => {
     let cancelled = false;
+    const spellClass = selectedSpellClass !== "any" ? [selectedSpellClass] : [];
+    const spellSchool =
+      selectedSpellClass !== "any" ? [selectedSpellClass] : [];
+    const spellLevel = selectedSpellClass !== "any" ? [selectedSpellClass] : [];
     const getSpells = async () => {
-      const rawFilteredSpellIDs = await SpellProvider.getSpellIDsByFilters(
+      const iterator = await SpellProvider.getSpellIDsByFilters(
         spellName,
-        selectedSpellClass !== "any" ? [selectedSpellClass] : [],
-        selectedSpellSchool !== "any" ? [selectedSpellSchool] : [],
-        selectedSpellLevel !== "any" ? [selectedSpellLevel] : []
+        spellClass,
+        spellSchool,
+        spellLevel
       );
-      if (!cancelled) {
-        setFilteredSpellIDs(rawFilteredSpellIDs);
+      let nextSpell = await iterator.next();
+      let nSpellsShown = 0;
+      let shownSpells = [];
+      while (!cancelled && nSpellsShown <= 20 && !nextSpell.done) {
+        console.log(nextSpell);
+        if (nextSpell.value != null) {
+          console.log("Adding");
+          shownSpells.push(nextSpell.value);
+
+          nSpellsShown++;
+          await nextFrame();
+        }
+        nextSpell = await iterator.next();
       }
+      setFilteredSpellIDs(shownSpells);
     };
 
     getSpells();
@@ -53,10 +70,6 @@ const SpellsKnownScreen = (props: SpellsKnownScreenProps) => {
       cancelled = true;
     };
   }, [spellName, selectedSpellClass, selectedSpellLevel, selectedSpellSchool]);
-
-  useEffect(() => {
-    console.dir({ filteredSpellIDs });
-  }, [filteredSpellIDs]);
 
   const updateClassList = (classList: Array<string>) =>
     setSpellClasses(classList.sort());
@@ -76,7 +89,9 @@ const SpellsKnownScreen = (props: SpellsKnownScreenProps) => {
     };
   }, []);
 
-  useFocusEffect(() => {});
+  useEffect(() => {
+    console.log(filteredSpellIDs);
+  }, [filteredSpellIDs]);
 
   return (
     <View style={[AppStyles.appBackground, styles.container]}>

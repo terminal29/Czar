@@ -1,14 +1,20 @@
 import { Spell } from "../structs/Spell";
 import { SpellID } from "../structs/SpellID";
-import AsyncStorage from "@react-native-community/async-storage";
 import * as xml2js from "react-native-xml2js";
 import nextFrame from "next-frame";
 import Toast from "react-native-root-toast";
+import SQLite from "react-native-sqlite-storage";
+SQLite.enablePromise(true);
+
+type AsyncFunction<O> = () => Promise<O>;
+
+interface SpellFilterIterator {
+  ids: Array<SpellID>;
+  currentIndex: number;
+  next: AsyncFunction<{ value: SpellID | null; done: boolean }>;
+}
 
 export default class SpellProvider {
-  private static spellDBName = "spells_full_";
-  private static spellSourcesDBName = "spell_sources_";
-
   private static numSpells: number = 0;
 
   private static classListListeners: Function[] = [];
@@ -20,13 +26,92 @@ export default class SpellProvider {
   private static levelListListeners: Function[] = [];
   private static levelList: string[] = [];
 
-  public static async clearStoredSpells() {}
+  private static db;
+  private static readonly dbName = "CZAR.db";
+  private static readonly spellTableName = "spells";
+  private static readonly sourceTableName = "sources";
+
+  private static async getDB() {
+    if (!SpellProvider.db) {
+      SpellProvider.db = await SQLite.openDatabase({
+        name: SpellProvider.dbName
+      });
+      // ensure spells table exists
+      await SpellProvider.db
+        .executeSql(`CREATE TABLE IF NOT EXISTS ${SpellProvider.spellTableName}(
+        id TEXT PRIMARY KEY NOT NULL,
+        name TEXT NOT NULL,
+        source TEXT NOT NULL,
+        formattedText TEXT NOT NULL,
+        classes TEXT NOT NULL,
+        keywords TEXT NOT NULL,
+        level TEXT NOT NULL,
+        school TEXT NOT NULL,
+        time TEXT NOT NULL,
+        duration TEXT NOT NULL,
+        range TEXT NOT NULL,
+        has_verbal_component BOOL NOT NULL,
+        has_somatic_component BOOL NOT NULL,
+        has_material_component BOOL NOT NULL,
+        material_components TEXT,
+        is_concentration BOOL NOT NULL,
+        is_ritual BOOL NOT NULL
+      );`);
+
+      // ensure sources table exists
+      await SpellProvider.db
+        .executeSql(`CREATE TABLE IF NOT EXISTS ${SpellProvider.sourceTableName}(
+        id INTEGER PRIMARY KEY,
+        url TEXT NOT NULL 
+      );`);
+    }
+    return SpellProvider.db;
+  }
+
+  private static insertSpell(db: any, spell: Spell): Promise<any> {
+    return db.executeSql(
+      `INSERT INTO ${SpellProvider.spellTableName} VALUES (
+      "${spell.id}",
+      "${encodeURI(spell.name)}",
+      "${encodeURI(spell.source)}",
+      "${encodeURI(spell.formattedText)}",
+      "${encodeURI(JSON.stringify(spell.classes))}",
+      "${encodeURI(JSON.stringify(spell.keywords))}",
+      "${encodeURI(spell.level)}",
+      "${encodeURI(spell.school)}",
+      "${encodeURI(spell.time)}",
+      "${encodeURI(spell.duration)}",
+      "${encodeURI(spell.range)}",
+      ${spell.hasVerbalComponent ? 1 : 0},
+      ${spell.hasSomaticComponent ? 1 : 0},
+      ${spell.hasMaterialComponent ? 1 : 0},
+      ${
+        spell.materialComponents
+          ? `"${encodeURI(spell.materialComponents)}"`
+          : `NULL`
+      },
+      ${spell.isConcentration ? 1 : 0},
+      ${spell.isRitual ? 1 : 0}
+    );`
+    );
+  }
+
+  private static rowResponseToSpell(response: object): Spell {
+    return new Spell();
+  }
+
+  public static async clearStoredSpells() {
+    await SpellProvider.getDB().then(db =>
+      db.executeSql(`DELETE FROM ${SpellProvider.spellTableName};`)
+    );
+  }
 
   public static async downloadSpellsFromSources() {
     SpellProvider.classList = [];
     SpellProvider.levelList = [];
     SpellProvider.schoolList = [];
     SpellProvider.notifyListeners();
+    await SpellProvider.clearStoredSpells();
 
     const getIndexFiles = async (url: string) => {
       return fetch(url)
@@ -105,7 +190,7 @@ export default class SpellProvider {
       const providedUrls = await SpellProvider.getSourceURLs();
       const allUrls = (
         await Promise.all(
-          providedUrls.map(async url => await getIndexFiles(url))
+          providedUrls.map(async url => await getIndexFiles(url.url))
         )
       ).flat(Infinity);
       Toast.show(`Parsing spells...`, {
@@ -119,33 +204,25 @@ export default class SpellProvider {
           for (let element of url.xml["elements"]["element"]) {
             if (element["$"]["type"] == "Spell") {
               const spell = parseSpell(element);
-              allSpells.push([
-                SpellProvider.spellDBName + spell.id,
-                JSON.stringify(spell)
-              ]);
+              allSpells.push(spell);
               await nextFrame();
             }
           }
         }
       }
 
+      const db = await SpellProvider.getDB();
       Toast.show(`Saving spells...`, {
         duration: Toast.durations.SHORT,
         position: Toast.positions.BOTTOM
       });
-      let idx = 0;
-      let step = 10;
-      while (idx < allSpells.length) {
+
+      for (const spell of allSpells) {
         await nextFrame();
-        await AsyncStorage.multiSet(
-          allSpells.slice(idx, Math.min(idx + step, allSpells.length))
-        );
-        idx += step;
+        await SpellProvider.insertSpell(db, spell);
       }
 
       await SpellProvider.updateSpellDataFromStorage();
-
-      console.dir(allSpells[0]);
 
       Toast.show(`Loaded ${allSpells.length} spells`, {
         duration: Toast.durations.SHORT,
@@ -199,19 +276,30 @@ export default class SpellProvider {
   }
 
   public static async addSource(url: string) {
-    await AsyncStorage.setItem(SpellProvider.spellSourcesDBName + url, url);
+    await SpellProvider.getDB().then(db =>
+      db.executeSql(
+        `INSERT INTO ${SpellProvider.sourceTableName} (url) values('${url}');`
+      )
+    );
   }
 
   public static async removeSource(url: string) {
-    await AsyncStorage.removeItem(SpellProvider.spellSourcesDBName + url);
+    await SpellProvider.getDB().then(db =>
+      db.executeSql(
+        `DELETE FROM ${SpellProvider.sourceTableName} WHERE url='${url}';`
+      )
+    );
   }
 
-  public static async getSourceURLs(): Promise<string[]> {
-    const keys = await AsyncStorage.getAllKeys();
-    const sourceKeys = keys.filter(key =>
-      key.startsWith(SpellProvider.spellSourcesDBName)
+  public static async getSourceURLs(): Promise<{ id: number; url: string }[]> {
+    const urlRows = await (await SpellProvider.getDB()).executeSql(
+      `SELECT * FROM ${SpellProvider.sourceTableName};`
     );
-    return (await AsyncStorage.multiGet(sourceKeys)).map(s => s[1]);
+    const sources = [];
+    for (let i = 0; i < urlRows[0].rows.length; i++) {
+      sources.push(urlRows[0].rows.item(i));
+    }
+    return sources;
   }
 
   public static observeClassList(callback: Function) {
@@ -248,20 +336,56 @@ export default class SpellProvider {
   }
 
   public static async getSpellByID(id: SpellID): Promise<Spell> {
-    const spellText = await AsyncStorage.getItem(
-      SpellProvider.spellDBName + id.id
+    const spellRaw = SpellProvider.getRowData(
+      await (await SpellProvider.getDB()).executeSql(
+        `SELECT * from ${SpellProvider.spellTableName} where id='${id.id}';`
+      )
     );
-    return JSON.parse(spellText) as Spell;
+
+    if (spellRaw.length != 1) return null;
+
+    const spell = new Spell();
+    spell.name = decodeURI(spellRaw[0].name);
+    spell.id = spellRaw[0].id;
+    spell.source = decodeURI(spellRaw[0].source);
+    spell.formattedText = decodeURI(spellRaw[0].formattedText);
+
+    spell.classes = JSON.parse(decodeURI(spellRaw[0].classes));
+
+    spell.keywords = JSON.parse(decodeURI(spellRaw[0].keywords));
+    spell.duration = decodeURI(spellRaw[0].duration);
+
+    spell.level = decodeURI(spellRaw[0].level);
+    spell.school = decodeURI(spellRaw[0].school);
+    spell.time = decodeURI(spellRaw[0].time);
+    spell.range = decodeURI(spellRaw[0].range);
+    spell.hasVerbalComponent = spellRaw[0].has_verbal_component === 1;
+    spell.hasSomaticComponent = spellRaw[0].has_somatic_component === 1;
+    spell.hasMaterialComponent = spellRaw[0].has_material_component === 1;
+    spell.materialComponents = spellRaw[0].material_components
+      ? decodeURI(spellRaw[0].material_components)
+      : null;
+    spell.isConcentration = spellRaw[0].is_concentration;
+    spell.isRitual = spellRaw[0].is_ritual;
+
+    return spell;
+  }
+
+  private static getRowData(response) {
+    const data = [];
+    for (let i = 0; i < response[0].rows.length; i++) {
+      data.push(response[0].rows.item(i));
+    }
+    return data;
   }
 
   public static async getSpellIDs(): Promise<SpellID[]> {
-    const keys = await AsyncStorage.getAllKeys();
-    const spellIDKeys = keys.filter(key =>
-      key.startsWith(SpellProvider.spellDBName)
-    );
-    return spellIDKeys.map(
-      key => new SpellID(key.substr(SpellProvider.spellDBName.length))
-    );
+    const ids = SpellProvider.getRowData(
+      await (await SpellProvider.getDB()).executeSql(
+        `SELECT id from ${SpellProvider.spellTableName};`
+      )
+    ) as SpellID[];
+    return ids;
   }
 
   public static async getSpellIDsByFilters(
@@ -269,39 +393,50 @@ export default class SpellProvider {
     classes: string[],
     schools: string[],
     levels: string[]
-  ): Promise<SpellID[]> {
-    console.dir({ name, classes, schools, levels });
+  ) {
     const ids = await SpellProvider.getSpellIDs();
-    const validIDs = [];
-    for (const spellID of ids) {
-      await nextFrame();
-      const spell = await SpellProvider.getSpellByID(spellID);
+    let rtn: SpellFilterIterator = {
+      ids,
+      currentIndex: 0,
+      next: null
+    };
+
+    rtn.next = async () => {
+      if (rtn.currentIndex === ids.length) return { value: null, done: true };
+      const spell = await SpellProvider.getSpellByID(ids[rtn.currentIndex]);
+      rtn.currentIndex++;
+
+      let valid = true;
       if (
         name &&
         !spell.name.toLocaleLowerCase().search(name.toLocaleLowerCase())
       ) {
-        continue;
+        valid = false;
       }
       if (
+        valid &&
         classes.length > 0 &&
         !spell.classes.every(spellClass => classes.indexOf(spellClass) >= 0)
       ) {
-        continue;
+        valid = false;
       }
       if (
+        valid &&
         schools.length > 0 &&
         !schools.every(spellSchool => spell.school === spellSchool)
       ) {
-        continue;
+        valid = false;
       }
       if (
+        valid &&
         levels.length > 0 &&
         !levels.every(spellLevel => spell.level === spellLevel)
       ) {
-        continue;
+        valid = false;
       }
-      validIDs.push(spellID);
-    }
-    return validIDs;
+      rtn.currentIndex++;
+      return { value: valid ? new SpellID(spell.id) : null, done: false };
+    };
+    return rtn;
   }
 }
