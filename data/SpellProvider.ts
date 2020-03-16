@@ -335,10 +335,10 @@ export default class SpellProvider {
     );
   }
 
-  public static async getSpellByID(id: SpellID): Promise<Spell> {
+  public static async getSpellByID(spellID: SpellID): Promise<Spell> {
     const spellRaw = SpellProvider.getRowData(
       await (await SpellProvider.getDB()).executeSql(
-        `SELECT * from ${SpellProvider.spellTableName} where id='${id.id}';`
+        `SELECT * from ${SpellProvider.spellTableName} where id='${spellID.id}';`
       )
     );
 
@@ -402,36 +402,41 @@ export default class SpellProvider {
     };
 
     rtn.next = async () => {
-      if (rtn.currentIndex === ids.length) return { value: null, done: true };
+      if (rtn.currentIndex === ids.length || !ids[rtn.currentIndex])
+        return { value: null, done: true };
       const spell = await SpellProvider.getSpellByID(ids[rtn.currentIndex]);
       rtn.currentIndex++;
-
       let valid = true;
       if (
         name &&
-        !spell.name.toLocaleLowerCase().search(name.toLocaleLowerCase())
+        name.length > 0 &&
+        spell.name.toLocaleLowerCase().search(name.toLocaleLowerCase()) === -1
       ) {
+        console.log("Bad name");
         valid = false;
       }
       if (
         valid &&
         classes.length > 0 &&
-        !spell.classes.every(spellClass => classes.indexOf(spellClass) >= 0)
+        !classes.some(spellClass => spell.classes.indexOf(spellClass) !== -1)
       ) {
+        console.log("Bad class");
         valid = false;
       }
       if (
         valid &&
         schools.length > 0 &&
-        !schools.every(spellSchool => spell.school === spellSchool)
+        !schools.some(spellSchool => spell.school === spellSchool)
       ) {
+        console.log("Bad school");
         valid = false;
       }
       if (
         valid &&
         levels.length > 0 &&
-        !levels.every(spellLevel => spell.level === spellLevel)
+        !levels.some(spellLevel => spell.level === spellLevel)
       ) {
+        console.log("Bad level");
         valid = false;
       }
       rtn.currentIndex++;

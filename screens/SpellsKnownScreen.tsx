@@ -39,8 +39,8 @@ const SpellsKnownScreen = (props: SpellsKnownScreenProps) => {
     let cancelled = false;
     const spellClass = selectedSpellClass !== "any" ? [selectedSpellClass] : [];
     const spellSchool =
-      selectedSpellClass !== "any" ? [selectedSpellClass] : [];
-    const spellLevel = selectedSpellClass !== "any" ? [selectedSpellClass] : [];
+      selectedSpellSchool !== "any" ? [selectedSpellSchool] : [];
+    const spellLevel = selectedSpellLevel !== "any" ? [selectedSpellLevel] : [];
     const getSpells = async () => {
       const iterator = await SpellProvider.getSpellIDsByFilters(
         spellName,
@@ -51,10 +51,9 @@ const SpellsKnownScreen = (props: SpellsKnownScreenProps) => {
       let nextSpell = await iterator.next();
       let nSpellsShown = 0;
       let shownSpells = [];
+      // Something fucky here
       while (!cancelled && nSpellsShown <= 20 && !nextSpell.done) {
-        console.log(nextSpell);
         if (nextSpell.value != null) {
-          console.log("Adding");
           shownSpells.push(nextSpell.value);
 
           nSpellsShown++;
@@ -64,6 +63,7 @@ const SpellsKnownScreen = (props: SpellsKnownScreenProps) => {
       }
       setFilteredSpellIDs(shownSpells);
     };
+    setFilteredSpellIDs([]);
 
     getSpells();
     return () => {
@@ -121,6 +121,7 @@ const SpellsKnownScreen = (props: SpellsKnownScreenProps) => {
                 placeholder={"Spell name..."}
                 placeholderTextColor={AppStyles.inputPlaceholder.color}
                 style={[AppStyles.headerSubtext, styles.searchInput]}
+                onChangeText={text => setSpellName(text)}
               ></TextInput>
               <TouchableOpacity
                 onPress={() => setFilterBoxVisibility(!filterBoxVisible)}
