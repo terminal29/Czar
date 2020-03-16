@@ -1,5 +1,5 @@
 import * as React from "react";
-import { Text, View, StyleSheet } from "react-native";
+import { Text, View, StyleSheet, ScrollView } from "react-native";
 import { SpellID } from "../structs/SpellID";
 import { useEffect, useState } from "react";
 import SpellProvider from "../data/SpellProvider";
@@ -61,64 +61,145 @@ const SpellInfoScreen = (props: SpellInfoScreenProps) => {
   }, [spellInfo]);
 
   return (
-    <View style={[AppStyles.appBackground, styles.container]}>
+    <ScrollView
+      style={[AppStyles.appBackground, styles.container]}
+      contentContainerStyle={{
+        padding: AppStyles.edgePadding.paddingHorizontal
+      }}
+    >
       {loading ? (
         <View>
           <Text>Loading...</Text>
         </View>
       ) : spellInfo ? (
         <>
-          <Text>{spellInfo.name}</Text>
-          <View>
-            <Text>Level</Text>
-            <Text>{spellInfo.level === "0" ? "Cantrip" : spellInfo.level}</Text>
-          </View>
-          <View>
-            <Text>School</Text>
-            <Text>{spellInfo.school}</Text>
-          </View>
-          <View>
-            <Text>Class</Text>
-            <Text>{spellInfo.classes.join(", ")}</Text>
-          </View>
-          <View>
-            <Text>Range</Text>
-            <Text>{spellInfo.range}</Text>
-          </View>
-          <View>
-            <Text>Components</Text>
-            <Text>
-              {spellInfo.hasMaterialComponent ? "V" : ""}
-              {spellInfo.hasSomaticComponent ? "S" : ""}
-              {spellInfo.hasMaterialComponent ? "M" : ""}
+          <View
+            style={[
+              AppStyles.boxRounded,
+              AppStyles.boxBackground,
+              styles.innerBox
+            ]}
+          >
+            <Text style={[AppStyles.headerText, styles.headerMargin]}>
+              {spellInfo.name}
             </Text>
-          </View>
-          <View>
-            <Text>Duration</Text>
-            <Text>{spellInfo.duration}</Text>
-          </View>
-          <View>
-            <Text>Ritual</Text>
-            <Text>{spellInfo.isRitual ? "Yes" : "No"}</Text>
-          </View>
-          <View>
-            <Text>Concentration</Text>
-            <Text>{spellInfo.isConcentration ? "Yes" : "No"}</Text>
-          </View>
-          <View>
-            <View>
-              {(() => {
-                if (descriptionXML) {
-                  const comps = DescriptionFormatter.DescriptionXML2ReactElements(
-                    descriptionXML
-                  );
-                  console.log(Array.isArray(comps) && comps.length);
-                  return comps;
-                }
-              })()}
+            <View style={styles.infoBox}>
+              <Text style={[AppStyles.smallHeaderSubtext, styles.leftInfoItem]}>
+                Level
+              </Text>
+              <Text
+                style={[AppStyles.smallHeaderSubtext, styles.rightInfoItem]}
+              >
+                {spellInfo.level === "0" ? "Cantrip" : spellInfo.level}
+              </Text>
             </View>
+            <View style={styles.infoBox}>
+              <Text style={[AppStyles.smallHeaderSubtext, styles.leftInfoItem]}>
+                School
+              </Text>
+              <Text
+                style={[AppStyles.smallHeaderSubtext, styles.rightInfoItem]}
+              >
+                {spellInfo.school}
+              </Text>
+            </View>
+            <View style={styles.infoBox}>
+              <Text style={[AppStyles.smallHeaderSubtext, styles.leftInfoItem]}>
+                Classes
+              </Text>
+              <Text
+                style={[AppStyles.smallHeaderSubtext, styles.rightInfoItem]}
+              >
+                {spellInfo.classes.join(", ")}
+              </Text>
+            </View>
+            <View style={styles.infoBox}>
+              <Text style={[AppStyles.smallHeaderSubtext, styles.leftInfoItem]}>
+                Range
+              </Text>
+              <Text
+                style={[AppStyles.smallHeaderSubtext, styles.rightInfoItem]}
+              >
+                {spellInfo.range}
+              </Text>
+            </View>
+            <View style={styles.infoBox}>
+              <Text style={[AppStyles.smallHeaderSubtext, styles.leftInfoItem]}>
+                Components
+              </Text>
+              <Text
+                style={[AppStyles.smallHeaderSubtext, styles.rightInfoItem]}
+              >
+                {spellInfo.hasMaterialComponent ? "V" : ""}
+                {spellInfo.hasSomaticComponent ? "S" : ""}
+                {spellInfo.hasMaterialComponent ? "M" : ""}
+              </Text>
+            </View>
+            {spellInfo.hasMaterialComponent && (
+              <View style={styles.infoBox}>
+                <Text
+                  style={[AppStyles.smallHeaderSubtext, styles.leftInfoItem]}
+                >
+                  Materials
+                </Text>
+                <Text
+                  style={[AppStyles.smallHeaderSubtext, styles.rightInfoItem]}
+                >
+                  {spellInfo.materialComponents}
+                </Text>
+              </View>
+            )}
+            <View style={styles.infoBox}>
+              <Text style={[AppStyles.smallHeaderSubtext, styles.leftInfoItem]}>
+                Duration
+              </Text>
+              <Text style={[AppStyles.smallHeaderSubtext]}>
+                {spellInfo.duration}
+              </Text>
+            </View>
+            <View style={styles.infoBox}>
+              <Text style={[AppStyles.smallHeaderSubtext, styles.leftInfoItem]}>
+                Ritual
+              </Text>
+              <Text
+                style={[AppStyles.smallHeaderSubtext, styles.rightInfoItem]}
+              >
+                {spellInfo.isRitual ? "Yes" : "No"}
+              </Text>
+            </View>
+            <View style={styles.infoBox}>
+              <Text style={[AppStyles.smallHeaderSubtext, styles.leftInfoItem]}>
+                Concentration
+              </Text>
+              <Text
+                style={[AppStyles.smallHeaderSubtext, styles.rightInfoItem]}
+              >
+                {spellInfo.isConcentration ? "Yes" : "No"}
+              </Text>
+            </View>
+            <View>
+              <View>
+                {(() => {
+                  if (descriptionXML) {
+                    const comps = DescriptionFormatter.DescriptionXML2ReactElements(
+                      descriptionXML,
+                      { extraStyles: [styles.textTopMargin] }
+                    );
+                    return comps;
+                  }
+                })()}
+              </View>
 
-            <Text>{spellInfo.source}</Text>
+              <Text
+                style={[
+                  AppStyles.smallHeaderSubtext,
+                  styles.rightText,
+                  styles.textTopMargin
+                ]}
+              >
+                {spellInfo.source}
+              </Text>
+            </View>
           </View>
           {props.extraButtons && props.extraButtons}
         </>
@@ -127,7 +208,7 @@ const SpellInfoScreen = (props: SpellInfoScreenProps) => {
           <Text>Unable to load spell data</Text>
         </View>
       )}
-    </View>
+    </ScrollView>
   );
 };
 
@@ -136,5 +217,28 @@ export default SpellInfoScreen;
 const styles = StyleSheet.create({
   container: {
     flex: 1
+  },
+  innerBox: {
+    paddingHorizontal: 30,
+    paddingVertical: 20
+  },
+  headerMargin: {
+    marginBottom: 40
+  },
+  infoBox: {
+    flexDirection: "row",
+    marginTop: 2
+  },
+  leftInfoItem: {
+    flexBasis: 150
+  },
+  rightInfoItem: {
+    flex: 1
+  },
+  textTopMargin: {
+    marginTop: 20
+  },
+  rightText: {
+    textAlign: "right"
   }
 });

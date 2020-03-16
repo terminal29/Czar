@@ -13,22 +13,22 @@ const AppStyles = StyleSheet.create({
   headerText: {
     fontSize: 35,
     color: "#E8E8E8",
-    fontFamily: "Sen-Regular"
+    fontFamily: "Baloo2-Regular"
   },
   headerSubtext: {
-    fontSize: 15,
+    fontSize: 17,
     color: "#E8E8E8",
-    fontFamily: "Sen-Regular"
+    fontFamily: "Baloo2-Regular"
   },
   smallHeaderText: {
     fontSize: 30,
     color: "#E8E8E8",
-    fontFamily: "Sen-Regular"
+    fontFamily: "Baloo2-Regular"
   },
   smallHeaderSubtext: {
-    fontSize: 20,
+    fontSize: 22,
     color: "#E8E8E8",
-    fontFamily: "Sen-Regular"
+    fontFamily: "Baloo2-Regular"
   },
   smallRightMargin: {
     marginRight: 20
@@ -41,8 +41,9 @@ const AppStyles = StyleSheet.create({
   },
   infoText: {
     color: "#E8E8E8",
-    fontSize: 15,
-    fontFamily: "Sen-Regular"
+    fontSize: 18,
+    lineHeight: 21,
+    fontFamily: "Baloo2-Regular"
   },
   edgePadding: {
     paddingHorizontal: 20
@@ -50,7 +51,7 @@ const AppStyles = StyleSheet.create({
   inputPlaceholder: {
     fontSize: 15,
     color: "#A7A7A7",
-    fontFamily: "Sen-Regular"
+    fontFamily: "Baloo2-Regular"
   }
 });
 

@@ -5,8 +5,10 @@ import { Spell } from "../structs/Spell";
 import * as xml2js from "react-native-xml2js";
 import { v4 as uuid } from "react-native-uuid";
 
-function DescriptionXML2ReactElements(object: any): React.ReactElement | any[] {
-  console.log(object);
+function DescriptionXML2ReactElements(
+  object: any,
+  options?: { extraStyles?: Array<object> }
+): React.ReactElement | any[] {
   if (object["_"]) {
     // has text
     if (object["$"]) {
@@ -15,7 +17,15 @@ function DescriptionXML2ReactElements(object: any): React.ReactElement | any[] {
         return (
           <Text
             key={uuid()}
-            style={[AppStyles.infoText, { fontStyle: "italic" }]}
+            style={[
+              AppStyles.infoText,
+              { fontStyle: "italic" },
+              ...(options
+                ? options.extraStyles
+                  ? options.extraStyles
+                  : []
+                : [])
+            ]}
           >
             {object["_"]}
           </Text>
@@ -24,24 +34,40 @@ function DescriptionXML2ReactElements(object: any): React.ReactElement | any[] {
         return (
           <Text
             key={uuid()}
-            style={[AppStyles.infoText, { fontStyle: "italic" }]}
+            style={[
+              AppStyles.infoText,
+              { fontStyle: "italic" },
+              ...(options
+                ? options.extraStyles
+                  ? options.extraStyles
+                  : []
+                : [])
+            ]}
           >
             {object["_"]}
           </Text>
         );
       }
     }
-    return DescriptionXML2ReactElements(object["_"]);
+    return DescriptionXML2ReactElements(object["_"], options);
   }
   if (object["p"]) {
-    return DescriptionXML2ReactElements(object["p"]);
+    return DescriptionXML2ReactElements(object["p"], options);
   }
   if (Array.isArray(object)) {
-    return object.map(subObject => DescriptionXML2ReactElements(subObject));
+    return object.map(subObject =>
+      DescriptionXML2ReactElements(subObject, options)
+    );
   }
   if (typeof object === "string" || object instanceof String) {
     return (
-      <Text key={uuid()} style={[AppStyles.infoText]}>
+      <Text
+        key={uuid()}
+        style={[
+          AppStyles.infoText,
+          ...(options ? (options.extraStyles ? options.extraStyles : []) : [])
+        ]}
+      >
         {object}
       </Text>
     );

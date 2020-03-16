@@ -12,6 +12,8 @@ import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
 import { AppStyles } from "./styles/AppStyles";
 import SpellProvider from "./data/SpellProvider";
 import { createStackNavigator } from "@react-navigation/stack";
+import RoundedIconButton from "./components/RoundedIconButton";
+import Toast from "react-native-root-toast";
 
 export default function App() {
   const spellLists: Array<SpellList> = [
@@ -153,7 +155,22 @@ export default function App() {
   const SpellPopupScreen = ({ route, navigation }) => (
     <SpellInfoScreen
       spellID={route.params.spellID}
-      onBackPressed={() => navigation.goBack()}
+      extraButtons={[
+        <RoundedIconButton
+          onPressed={() => Toast.show("Not implemented yet ;)")}
+          text={"Add to List"}
+          iconName={"ios-add"}
+          disabled={false}
+          style={styles.overlayButtonTopMargin}
+        />,
+        <RoundedIconButton
+          onPressed={() => navigation.goBack()}
+          text={"Back"}
+          iconName={"ios-arrow-back"}
+          disabled={false}
+          style={styles.overlayButtonFullMargin}
+        />
+      ]}
     ></SpellInfoScreen>
   );
 
@@ -180,5 +197,11 @@ const styles = StyleSheet.create({
   },
   spellLoadingButton: {
     color: "#a0a0a0"
+  },
+  overlayButtonTopMargin: {
+    marginTop: 10
+  },
+  overlayButtonFullMargin: {
+    marginVertical: 10
   }
 });
