@@ -1,5 +1,5 @@
 import * as React from "react";
-import { Text, View, StyleSheet } from "react-native";
+import { Text, View, StyleSheet, TouchableOpacity } from "react-native";
 import { SpellID } from "../structs/SpellID";
 import { AppStyles } from "../styles/AppStyles";
 import { useState, useEffect } from "react";
@@ -11,6 +11,7 @@ import Spinner from "react-native-spinkit";
 interface SpellItemCompactProps {
   style?: any;
   spellID: SpellID;
+  onPress?: Function;
 }
 
 const SpellItemCompact = (props: SpellItemCompactProps) => {
@@ -126,69 +127,71 @@ const SpellItemCompact = (props: SpellItemCompactProps) => {
           <Spinner type={"Wave"} color={AppStyles.smallHeaderText.color} />
         </View>
       ) : spellInfo ? (
-        <View style={styles.mainContainer}>
-          <View style={styles.leftContainer}>
-            <Text style={AppStyles.smallHeaderText}>{spellInfo.name}</Text>
-            <View style={styles.smallDescriptionContainer}>
-              {(() => {
-                if (spellDescXML) {
-                  const comps = makeDescriptionComponents(spellDescXML);
-                  if (Array.isArray(comps)) {
-                    if (comps.length > 0) {
-                      comps[0] = React.cloneElement(comps[0], {
-                        numberOfLines: 4
-                      });
+        <TouchableOpacity onPress={() => props.onPress && props.onPress()}>
+          <View style={styles.mainContainer}>
+            <View style={styles.leftContainer}>
+              <Text style={AppStyles.smallHeaderText}>{spellInfo.name}</Text>
+              <View style={styles.smallDescriptionContainer}>
+                {(() => {
+                  if (spellDescXML) {
+                    const comps = makeDescriptionComponents(spellDescXML);
+                    if (Array.isArray(comps)) {
+                      if (comps.length > 0) {
+                        comps[0] = React.cloneElement(comps[0], {
+                          numberOfLines: 4
+                        });
+                      }
                     }
+                    return comps[0];
                   }
-                  return comps[0];
-                }
-              })()}
+                })()}
+              </View>
+            </View>
+            <View style={styles.rightContainer}>
+              <Text
+                numberOfLines={1}
+                ellipsizeMode="tail"
+                style={AppStyles.smallHeaderSubtext}
+              >
+                {spellInfo.level === "0"
+                  ? "Cantrip"
+                  : `Level ${spellInfo.level}`}
+              </Text>
+              <Text
+                numberOfLines={1}
+                ellipsizeMode="tail"
+                style={[
+                  AppStyles.smallHeaderSubtext,
+                  styles.spellSmallInfoMargin
+                ]}
+              >
+                {spellInfo.time}
+              </Text>
+              <Text
+                numberOfLines={1}
+                ellipsizeMode="tail"
+                style={[
+                  AppStyles.smallHeaderSubtext,
+                  styles.spellSmallInfoMargin
+                ]}
+              >
+                {spellInfo.hasMaterialComponent ? "V" : ""}
+                {spellInfo.hasSomaticComponent ? "S" : ""}
+                {spellInfo.hasMaterialComponent ? "M" : ""}
+              </Text>
+              <Text
+                numberOfLines={1}
+                ellipsizeMode="tail"
+                style={[
+                  AppStyles.smallHeaderSubtext,
+                  styles.spellSmallInfoMargin
+                ]}
+              >
+                {spellInfo.range}
+              </Text>
             </View>
           </View>
-          <View style={styles.rightContainer}>
-            <Text
-              numberOfLines={1}
-              ellipsizeMode="tail"
-              style={AppStyles.smallHeaderSubtext}
-            >
-              {spellInfo.level === "0" ? "Cantrip" : `Level ${spellInfo.level}`}
-            </Text>
-            <Text
-              numberOfLines={1}
-              ellipsizeMode="tail"
-              style={[
-                AppStyles.smallHeaderSubtext,
-                styles.spellSmallInfoMargin
-              ]}
-            >
-              {spellInfo.time}
-            </Text>
-            <Text
-              numberOfLines={1}
-              ellipsizeMode="tail"
-              style={[
-                AppStyles.smallHeaderSubtext,
-                styles.spellSmallInfoMargin
-              ]}
-            >
-              {spellInfo.hasMaterialComponent ? "V" : ""}
-              {spellInfo.hasSomaticComponent ? "S" : ""}
-              {spellInfo.hasMaterialComponent ? "M" : ""}
-            </Text>
-            <Text
-              numberOfLines={1}
-              ellipsizeMode="tail"
-              style={[
-                AppStyles.smallHeaderSubtext,
-                styles.spellSmallInfoMargin
-              ]}
-            >
-              {spellInfo.range}
-            </Text>
-          </View>
-
-          <View style={styles.subHeaderContainer}></View>
-        </View>
+        </TouchableOpacity>
       ) : (
         <View style={styles.infoContainer}>
           <Text style={AppStyles.smallHeaderSubtext}>{props.spellID.id}</Text>

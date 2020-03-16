@@ -17,6 +17,10 @@ import SpellItemCompact from "../components/SpellItemCompact";
 import { SpellID } from "../structs/SpellID";
 import { useFocusEffect } from "@react-navigation/native";
 import nextFrame from "next-frame";
+import { createStackNavigator } from "@react-navigation/stack";
+import SpellInfoScreen from "./SpellInfoScreen";
+
+const SpellInfoPopupStack = createStackNavigator();
 
 interface SpellsKnownScreenProps {}
 
@@ -59,7 +63,6 @@ const SpellsKnownScreen = (props: SpellsKnownScreenProps) => {
       }
       setFilteredSpellIDs(shownSpells);
     };
-    //setFilteredSpellIDs([]);
 
     getSpells();
     return () => {
@@ -85,7 +88,7 @@ const SpellsKnownScreen = (props: SpellsKnownScreenProps) => {
     };
   }, []);
 
-  return (
+  const SpellList = ({ navigation }) => (
     <View style={[AppStyles.appBackground, styles.container]}>
       {filterBoxVisible && (
         <TouchableWithoutFeedback onPress={() => setFilterBoxVisibility(false)}>
@@ -264,17 +267,36 @@ const SpellsKnownScreen = (props: SpellsKnownScreenProps) => {
         </View>
       </View>
       <View style={[AppStyles.edgePadding, styles.container]}>
-        <ScrollView>
+        <ScrollView style={AppStyles.appBackground}>
           {filteredSpellIDs.map(spellID => (
             <SpellItemCompact
               key={spellID.id}
               spellID={spellID}
               style={styles.spellListItem}
+              onPress={() => {
+                navigation.push("SpellPopup", { spellID });
+              }}
             />
           ))}
         </ScrollView>
       </View>
     </View>
+  );
+
+  const SpellPopup = ({ route, navigation }) => (
+    <SpellInfoScreen
+      spellID={route.params.spellID}
+      onBackPressed={() => navigation.goBack()}
+    ></SpellInfoScreen>
+  );
+  return (
+    <SpellInfoPopupStack.Navigator
+      headerMode="none"
+      initialRouteName="SpellList"
+    >
+      <SpellInfoPopupStack.Screen name="SpellList" component={SpellList} />
+      <SpellInfoPopupStack.Screen name="SpellPopup" component={SpellPopup} />
+    </SpellInfoPopupStack.Navigator>
   );
 };
 

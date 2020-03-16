@@ -1,7 +1,12 @@
 import * as React from "react";
 import { Text, View, StyleSheet } from "react-native";
+import { SpellID } from "../structs/SpellID";
 
-interface SpellInfoScreenProps {}
+interface SpellInfoScreenProps {
+  spellID: SpellID;
+  onBackPressed?: Function;
+  extraButtons?: any[];
+}
 
 const SpellInfoScreen = (props: SpellInfoScreenProps) => {
   return (
