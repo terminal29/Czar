@@ -4,8 +4,8 @@ import { SpellID } from "../structs/SpellID";
 import { AppStyles } from "../styles/AppStyles";
 import { useState, useEffect } from "react";
 import SpellProvider from "../data/SpellProvider";
+import DescriptionFormatter from "../data/DescriptionFormatter";
 import { Spell } from "../structs/Spell";
-import * as xml2js from "react-native-xml2js";
 import Spinner from "react-native-spinkit";
 
 interface SpellItemCompactProps {
@@ -39,31 +39,14 @@ const SpellItemCompact = (props: SpellItemCompactProps) => {
     };
   }, [loading]);
 
-  const formatSpellDescription = async (spell: Spell): Promise<object> => {
-    const parser = new xml2js.Parser({ explicitArray: true });
-
-    const tagFix = spell.formattedText
-      .replace("<0>", "<root>")
-      .replace("</0>", "</root>");
-    console.log(spell.formattedText);
-    const descriptionXML = (await new Promise((resolve, reject) => {
-      parser.parseString(tagFix, (err, xml) => {
-        if (err) {
-          reject(err);
-        }
-        resolve(xml);
-      });
-    })) as object;
-    console.log(descriptionXML);
-    return descriptionXML;
-  };
-
   useEffect(() => {
     let cancelled = false;
 
     const doXML = async () => {
       if (spellInfo) {
-        const descXML = await formatSpellDescription(spellInfo);
+        const descXML = await DescriptionFormatter.DescriptionString2XML(
+          spellInfo
+        );
         if (!cancelled) {
           setSpellDescXML(descXML["root"]);
         }
@@ -77,41 +60,6 @@ const SpellItemCompact = (props: SpellItemCompactProps) => {
       cancelled = true;
     };
   }, [spellInfo]);
-
-  const makeDescriptionComponents = (
-    object: any
-  ): React.ReactElement | any[] => {
-    console.log(object);
-    if (object["_"]) {
-      // has text
-      if (object["$"]) {
-        // has some formatted text
-        if (object["$"].class === "indent") {
-          return (
-            <Text style={[AppStyles.infoText, { fontStyle: "italic" }]}>
-              {object["_"]}
-            </Text>
-          );
-        } else {
-          return (
-            <Text style={[AppStyles.infoText, { fontStyle: "italic" }]}>
-              {object["_"]}
-            </Text>
-          );
-        }
-      }
-      return makeDescriptionComponents(object["_"]);
-    }
-    if (object["p"]) {
-      return makeDescriptionComponents(object["p"]);
-    }
-    if (Array.isArray(object)) {
-      return object.map(subObject => makeDescriptionComponents(subObject));
-    }
-    if (typeof object === "string" || object instanceof String) {
-      return <Text style={[AppStyles.infoText]}>{object}</Text>;
-    }
-  };
 
   return (
     <View
@@ -134,7 +82,9 @@ const SpellItemCompact = (props: SpellItemCompactProps) => {
               <View style={styles.smallDescriptionContainer}>
                 {(() => {
                   if (spellDescXML) {
-                    const comps = makeDescriptionComponents(spellDescXML);
+                    const comps = DescriptionFormatter.DescriptionXML2ReactElements(
+                      spellDescXML
+                    );
                     if (Array.isArray(comps)) {
                       if (comps.length > 0) {
                         comps[0] = React.cloneElement(comps[0], {
