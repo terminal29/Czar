@@ -49,21 +49,17 @@ const SpellsKnownScreen = (props: SpellsKnownScreenProps) => {
         spellLevel
       );
       let nextSpell = await iterator.next();
-      let nSpellsShown = 0;
       let shownSpells = [];
-      // Something fucky here
-      while (!cancelled && nSpellsShown <= 20 && !nextSpell.done) {
+      while (!cancelled && shownSpells.length <= 20 && !nextSpell.done) {
         if (nextSpell.value != null) {
           shownSpells.push(nextSpell.value);
-
-          nSpellsShown++;
           await nextFrame();
         }
         nextSpell = await iterator.next();
       }
       setFilteredSpellIDs(shownSpells);
     };
-    setFilteredSpellIDs([]);
+    //setFilteredSpellIDs([]);
 
     getSpells();
     return () => {

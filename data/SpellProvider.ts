@@ -291,9 +291,6 @@ export default class SpellProvider {
         .map(rawStringResult => decodeURI(rawStringResult.school))
         .flat(Infinity)
     );
-
-    console.dir({ classes, levels, schools });
-
     SpellProvider.schoolList = Array.from(schools);
     SpellProvider.levelList = Array.from(levels);
     SpellProvider.classList = Array.from(classes);

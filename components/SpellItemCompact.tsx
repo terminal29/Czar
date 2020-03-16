@@ -6,6 +6,8 @@ import { useState, useEffect } from "react";
 import SpellProvider from "../data/SpellProvider";
 import { Spell } from "../structs/Spell";
 
+import Spinner from "react-native-spinkit";
+
 interface SpellItemCompactProps {
   style?: any;
   spellID: SpellID;
@@ -13,21 +15,26 @@ interface SpellItemCompactProps {
 
 const SpellItemCompact = (props: SpellItemCompactProps) => {
   const [spellInfo, setSpellInfo] = useState<Spell | null>();
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     let cancelled = false;
-    const getSpell = async () => {
-      const spellInfoPromise = await SpellProvider.getSpellByID(props.spellID);
-      if (!cancelled) {
-        setSpellInfo(spellInfoPromise);
-      }
-    };
-    getSpell();
-
+    if (loading) {
+      const getSpell = async () => {
+        const spellInfoPromise = await SpellProvider.getSpellByID(
+          props.spellID
+        );
+        if (!cancelled) {
+          setSpellInfo(spellInfoPromise);
+          setLoading(false);
+        }
+      };
+      getSpell();
+    }
     return () => {
       cancelled = true;
     };
-  }, []);
+  }, [loading]);
 
   return (
     <View
@@ -38,9 +45,11 @@ const SpellItemCompact = (props: SpellItemCompactProps) => {
         props.style
       ]}
     >
-      {!spellInfo ? (
-        <Text style={AppStyles.smallHeaderText}>Loading...</Text>
-      ) : (
+      {loading ? (
+        <View style={styles.center}>
+          <Spinner type={"Wave"} color={AppStyles.smallHeaderText.color} />
+        </View>
+      ) : spellInfo ? (
         <>
           <Text style={AppStyles.smallHeaderText}>{spellInfo.name}</Text>
           <View style={styles.subHeaderContainer}>
@@ -86,6 +95,18 @@ const SpellItemCompact = (props: SpellItemCompactProps) => {
             </Text>
           </View>
         </>
+      ) : (
+        <View style={styles.infoContainer}>
+          <Text style={AppStyles.smallHeaderSubtext}>{props.spellID.id}</Text>
+          <View style={styles.infoContainer}>
+            <Text style={AppStyles.headerSubtext}>
+              Unable to load spell data.
+            </Text>
+            <Text style={AppStyles.headerSubtext}>
+              Reload spell database with the source this spell was from.
+            </Text>
+          </View>
+        </View>
       )}
     </View>
   );
@@ -105,5 +126,10 @@ const styles = StyleSheet.create({
   },
   infoContainer: {
     marginTop: 5
+  },
+  center: {
+    alignItems: "center",
+    justifyContent: "center",
+    margin: 20
   }
 });
