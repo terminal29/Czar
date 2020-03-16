@@ -11,6 +11,7 @@ import { NavigationContainer, TabActions } from "@react-navigation/native";
 import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
 import { AppStyles } from "./styles/AppStyles";
 import SpellProvider from "./data/SpellProvider";
+import { createStackNavigator } from "@react-navigation/stack";
 
 export default function App() {
   const spellLists: Array<SpellList> = [
@@ -65,6 +66,7 @@ export default function App() {
   }, []);
 
   const Tab = createBottomTabNavigator();
+  const Stack = createStackNavigator();
 
   const SourcesScreen = () => (
     <SpellSourcesScreen
@@ -98,49 +100,69 @@ export default function App() {
     />
   );
   const ListsScreen = () => <SpellListsScreen spellLists={spellLists} />;
-  const KnownScreen = () => <SpellsKnownScreen />;
+  const KnownScreen = ({ navigation }) => (
+    <SpellsKnownScreen
+      onSpellPressed={spellID =>
+        navigation.push("SpellPopupScreen", { spellID })
+      }
+    />
+  );
+
+  const MainAppScreen = () => (
+    <Tab.Navigator
+      screenOptions={({ route }) => ({
+        tabBarIcon: ({ focused, color, size }) => {
+          return (
+            <Text
+              style={[
+                AppStyles.headerSubtext,
+                styles.tabBarText,
+                focused && styles.tabBarTextHighlight
+              ]}
+            >
+              {route.name === "Sources" && spellsLoading ? (
+                <Spinner
+                  color={
+                    focused
+                      ? styles.tabBarTextHighlight.color
+                      : AppStyles.smallHeaderText.color
+                  }
+                  size={25}
+                  type={"Wave"}
+                />
+              ) : (
+                route.name
+              )}
+            </Text>
+          );
+        }
+      })}
+      tabBarOptions={{
+        showIcon: true,
+        showLabel: false,
+        style: { ...styles.tabBar }
+      }}
+      initialRouteName={"Search"}
+    >
+      <Tab.Screen name="Sources" component={SourcesScreen} />
+      <Tab.Screen name="Spells" component={ListsScreen} />
+      <Tab.Screen name="Search" component={KnownScreen} />
+    </Tab.Navigator>
+  );
+
+  const SpellPopupScreen = ({ route, navigation }) => (
+    <SpellInfoScreen
+      spellID={route.params.spellID}
+      onBackPressed={() => navigation.goBack()}
+    ></SpellInfoScreen>
+  );
 
   return (
     <NavigationContainer>
-      <Tab.Navigator
-        screenOptions={({ route }) => ({
-          tabBarIcon: ({ focused, color, size }) => {
-            return (
-              <Text
-                style={[
-                  AppStyles.headerSubtext,
-                  styles.tabBarText,
-                  focused && styles.tabBarTextHighlight
-                ]}
-              >
-                {route.name === "Sources" && spellsLoading ? (
-                  <Spinner
-                    color={
-                      focused
-                        ? styles.tabBarTextHighlight.color
-                        : AppStyles.smallHeaderText.color
-                    }
-                    size={25}
-                    type={"Wave"}
-                  />
-                ) : (
-                  route.name
-                )}
-              </Text>
-            );
-          }
-        })}
-        tabBarOptions={{
-          showIcon: true,
-          showLabel: false,
-          style: { ...styles.tabBar }
-        }}
-        initialRouteName={"Search"}
-      >
-        <Tab.Screen name="Sources" component={SourcesScreen} />
-        <Tab.Screen name="Spells" component={ListsScreen} />
-        <Tab.Screen name="Search" component={KnownScreen} />
-      </Tab.Navigator>
+      <Stack.Navigator headerMode="none" initialRouteName="MainApp">
+        <Stack.Screen name="MainAppScreen" component={MainAppScreen} />
+        <Stack.Screen name="SpellPopupScreen" component={SpellPopupScreen} />
+      </Stack.Navigator>
     </NavigationContainer>
   );
 }
