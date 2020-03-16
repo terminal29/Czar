@@ -50,7 +50,7 @@ const SpellsKnownScreen = (props: SpellsKnownScreenProps) => {
       );
       let nextSpell = await iterator.next();
       let shownSpells = [];
-      while (!cancelled && shownSpells.length <= 20 && !nextSpell.done) {
+      while (!cancelled && shownSpells.length <= 2 && !nextSpell.done) {
         if (nextSpell.value != null) {
           shownSpells.push(nextSpell.value);
           await nextFrame();

@@ -31,7 +31,7 @@ const AppStyles = StyleSheet.create({
     fontFamily: "Sen-Regular"
   },
   smallRightMargin: {
-    marginRight: 10
+    marginRight: 20
   },
   headerContainer: {
     height: 120,
