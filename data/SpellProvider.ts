@@ -248,32 +248,55 @@ export default class SpellProvider {
   }
 
   public static async updateSpellDataFromStorage() {
-    const ids = await SpellProvider.getSpellIDs();
-    const spells = [];
-    const spellPromises = ids.map(id =>
-      SpellProvider.getSpellByID(id).then(spell => spells.push(spell))
-    );
-    await Promise.all(spellPromises);
-    SpellProvider.numSpells = spells.length;
-    SpellProvider.classList = [];
-    SpellProvider.levelList = [];
-    SpellProvider.schoolList = [];
-    spells.forEach(spell => {
-      spell.classes.forEach(spellClass => {
-        if (SpellProvider.classList.findIndex(v => v === spellClass) === -1) {
-          SpellProvider.classList.push(spellClass);
-        }
-      });
-      // Add all new spell levels
-      if (SpellProvider.levelList.findIndex(v => v === spell.level) === -1) {
-        SpellProvider.levelList.push(spell.level);
-      }
+    //const ids = await SpellProvider.getSpellIDs();
 
-      // Add all new spell schools
-      if (SpellProvider.schoolList.findIndex(v => v === spell.school) === -1) {
-        SpellProvider.schoolList.push(spell.school);
-      }
-    });
+    const classQuery = squel
+      .select()
+      .from(SpellProvider.spellTableName)
+      .field("classes")
+      .distinct();
+    const classesRaw = SpellProvider.getRowData(
+      await (await SpellProvider.getDB()).executeSql(classQuery.toString())
+    );
+    const classes = new Set<string>(
+      classesRaw
+        .map(rawStringResult => JSON.parse(decodeURI(rawStringResult.classes)))
+        .flat(Infinity)
+    );
+
+    const levelQuery = squel
+      .select()
+      .from(SpellProvider.spellTableName)
+      .field("level")
+      .distinct();
+    const levelsRaw = SpellProvider.getRowData(
+      await (await SpellProvider.getDB()).executeSql(levelQuery.toString())
+    );
+    const levels = new Set<string>(
+      levelsRaw
+        .map(rawStringResult => decodeURI(rawStringResult.level))
+        .flat(Infinity)
+    );
+
+    const schoolQuery = squel
+      .select()
+      .from(SpellProvider.spellTableName)
+      .field("school")
+      .distinct();
+    const schoolsRaw = SpellProvider.getRowData(
+      await (await SpellProvider.getDB()).executeSql(schoolQuery.toString())
+    );
+    const schools = new Set<string>(
+      schoolsRaw
+        .map(rawStringResult => decodeURI(rawStringResult.school))
+        .flat(Infinity)
+    );
+
+    console.dir({ classes, levels, schools });
+
+    SpellProvider.schoolList = Array.from(schools);
+    SpellProvider.levelList = Array.from(levels);
+    SpellProvider.classList = Array.from(classes);
     SpellProvider.notifyListeners();
   }
 
@@ -407,7 +430,7 @@ export default class SpellProvider {
       }
       query.where(andClasses);
     }
-    if (classes && classes.length > 0) {
+    if (levels && levels.length > 0) {
       let andLevels = squel.expr();
       for (const spellLevel of levels) {
         andLevels = andLevels.or(`level LIKE '%${encodeURI(spellLevel)}%'`);
