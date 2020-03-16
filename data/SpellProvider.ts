@@ -4,12 +4,13 @@ import * as xml2js from "react-native-xml2js";
 import nextFrame from "next-frame";
 import Toast from "react-native-root-toast";
 import SQLite from "react-native-sqlite-storage";
+import squel from "squel";
+
 SQLite.enablePromise(true);
 
 type AsyncFunction<O> = () => Promise<O>;
 
 interface SpellFilterIterator {
-  ids: Array<SpellID>;
   currentIndex: number;
   next: AsyncFunction<{ value: SpellID | null; done: boolean }>;
 }
@@ -36,6 +37,7 @@ export default class SpellProvider {
       SpellProvider.db = await SQLite.openDatabase({
         name: SpellProvider.dbName
       });
+
       // ensure spells table exists
       await SpellProvider.db
         .executeSql(`CREATE TABLE IF NOT EXISTS ${SpellProvider.spellTableName}(
@@ -394,53 +396,50 @@ export default class SpellProvider {
     schools: string[],
     levels: string[]
   ) {
-    const ids = await SpellProvider.getSpellIDs();
+    let query = squel.select().from(SpellProvider.spellTableName);
+    if (name && name.length > 0) {
+      query = query.where(`name LIKE '%${encodeURI(name)}%'`);
+    }
+    if (classes && classes.length > 0) {
+      let andClasses = squel.expr();
+      for (const spellClass of classes) {
+        andClasses = andClasses.or(`classes LIKE '%${encodeURI(spellClass)}%'`);
+      }
+      query.where(andClasses);
+    }
+    if (classes && classes.length > 0) {
+      let andLevels = squel.expr();
+      for (const spellLevel of levels) {
+        andLevels = andLevels.or(`level LIKE '%${encodeURI(spellLevel)}%'`);
+      }
+      query.where(andLevels);
+    }
+    if (classes && classes.length > 0) {
+      let andSchools = squel.expr();
+      for (const spellSchool of schools) {
+        andSchools = andSchools.or(`school LIKE '%${encodeURI(spellSchool)}%'`);
+      }
+      query.where(andSchools);
+    }
+
     let rtn: SpellFilterIterator = {
-      ids,
       currentIndex: 0,
       next: null
     };
 
     rtn.next = async () => {
-      if (rtn.currentIndex === ids.length || !ids[rtn.currentIndex])
+      const limitQuery = query.limit(1).offset(rtn.currentIndex);
+
+      const ids = SpellProvider.getRowData(
+        await (await SpellProvider.getDB()).executeSql(limitQuery.toString())
+      );
+
+      if (ids.length != 1) {
         return { value: null, done: true };
-      const spell = await SpellProvider.getSpellByID(ids[rtn.currentIndex]);
-      rtn.currentIndex++;
-      let valid = true;
-      if (
-        name &&
-        name.length > 0 &&
-        spell.name.toLocaleLowerCase().search(name.toLocaleLowerCase()) === -1
-      ) {
-        console.log("Bad name");
-        valid = false;
+      } else {
+        rtn.currentIndex++;
+        return { value: new SpellID(ids[0].id), done: false };
       }
-      if (
-        valid &&
-        classes.length > 0 &&
-        !classes.some(spellClass => spell.classes.indexOf(spellClass) !== -1)
-      ) {
-        console.log("Bad class");
-        valid = false;
-      }
-      if (
-        valid &&
-        schools.length > 0 &&
-        !schools.some(spellSchool => spell.school === spellSchool)
-      ) {
-        console.log("Bad school");
-        valid = false;
-      }
-      if (
-        valid &&
-        levels.length > 0 &&
-        !levels.some(spellLevel => spell.level === spellLevel)
-      ) {
-        console.log("Bad level");
-        valid = false;
-      }
-      rtn.currentIndex++;
-      return { value: valid ? new SpellID(spell.id) : null, done: false };
     };
     return rtn;
   }

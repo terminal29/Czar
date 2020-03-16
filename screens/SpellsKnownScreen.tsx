@@ -89,10 +89,6 @@ const SpellsKnownScreen = (props: SpellsKnownScreenProps) => {
     };
   }, []);
 
-  useEffect(() => {
-    console.log(filteredSpellIDs);
-  }, [filteredSpellIDs]);
-
   return (
     <View style={[AppStyles.appBackground, styles.container]}>
       {filterBoxVisible && (
