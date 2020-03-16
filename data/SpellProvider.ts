@@ -414,7 +414,7 @@ export default class SpellProvider {
       }
       query.where(andLevels);
     }
-    if (classes && classes.length > 0) {
+    if (schools && schools.length > 0) {
       let andSchools = squel.expr();
       for (const spellSchool of schools) {
         andSchools = andSchools.or(`school LIKE '%${encodeURI(spellSchool)}%'`);
