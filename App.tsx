@@ -16,12 +16,13 @@ import RoundedIconButton from "./components/RoundedIconButton";
 import Toast from "react-native-root-toast";
 import { SpellListAddBox } from "./components/SpellListAddBox";
 import SpellListAddScreen from "./screens/SpellListAddScreen";
+import { SpellID } from "./structs/SpellID";
+import SpellListProvider from "./data/SpellListProvider";
 
 const Tab = createBottomTabNavigator();
 const Stack = createStackNavigator();
 export default function App() {
   const [spellLists, setSpellLists] = useState<Array<SpellList>>([]);
-
   const [spellSources, setSpellSources] = useState([]);
   const [spellsLoading, setSpellsLoading] = useState(false);
 
@@ -29,8 +30,22 @@ export default function App() {
     SpellProvider.getSourceURLs().then(urls => setSpellSources(urls));
 
   useEffect(() => {
+    let cancelled = false;
     updateSourceURLs();
     SpellProvider.updateSpellDataFromStorage();
+
+    const updateSpellLists = async () => {
+      await SpellListProvider.observeSpellLists((lists: Array<SpellList>) => {
+        if (!cancelled) setSpellLists(lists);
+      });
+    };
+
+    updateSpellLists();
+
+    return () => {
+      cancelled = true;
+      SpellListProvider.unObserveSpellLists(updateSpellLists);
+    };
   }, []);
 
   const SourcesScreen = useCallback(
@@ -72,8 +87,8 @@ export default function App() {
       <SpellListsScreen
         spellLists={spellLists}
         onAddListPressed={() => navigation.push("SpellListAddScreen")}
-        onListPressed={id => {
-          navigation.push("SpellListScreen");
+        onListPressed={list => {
+          navigation.push("SpellListScreen", { list });
         }}
       />
     ),
@@ -142,7 +157,7 @@ export default function App() {
         extraButtons={[
           <RoundedIconButton
             key={"add"}
-            onPressed={(newList: SpellList) => {
+            onPressed={() => {
               Toast.show("Not implemented yet");
             }}
             text={"Add to List"}
@@ -164,20 +179,31 @@ export default function App() {
     []
   );
 
-  const AddSpellPopupScreen = useCallback(
+  const AddSpellListPopupScreen = useCallback(
     ({ route, navigation }) => (
       <SpellListAddScreen
         onDone={newList => {
-          const newLists = spellLists.filter(list => list.id !== newList.id);
-          newLists.push(newList);
-          setSpellLists(newLists);
+          // submit new list to lists
           navigation.goBack();
-          console.log("Added new spell list");
+          SpellListProvider.addSpellList(newList);
         }}
         onCancel={() => navigation.goBack()}
       />
     ),
-    [spellLists]
+    []
+  );
+
+  const SingleSpellListScreen = useCallback(
+    ({ route, navigation }) => (
+      <SpellListScreen
+        list={route.params.list}
+        onSpellPressed={(spellID: SpellID) => {
+          navigation.push("SpellPopupScreen", { spellID });
+        }}
+        onNavigateToSpellSearchPressed={() => navigation.navigate("Search")}
+      />
+    ),
+    []
   );
 
   return (
@@ -186,7 +212,10 @@ export default function App() {
         <Stack.Screen name="MainAppScreen">{MainAppScreen}</Stack.Screen>
         <Stack.Screen name="SpellPopupScreen">{SpellPopupScreen}</Stack.Screen>
         <Stack.Screen name="SpellListAddScreen">
-          {AddSpellPopupScreen}
+          {AddSpellListPopupScreen}
+        </Stack.Screen>
+        <Stack.Screen name="SpellListScreen">
+          {SingleSpellListScreen}
         </Stack.Screen>
       </Stack.Navigator>
     </NavigationContainer>

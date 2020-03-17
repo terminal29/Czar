@@ -3,12 +3,42 @@ import { Text, View, StyleSheet, ScrollView, Image } from "react-native";
 import { SpellList } from "../structs/SpellList";
 import { AppStyles } from "../styles/AppStyles";
 import SpellItemCompact from "../components/SpellItemCompact";
+import SpellListProvider from "../data/SpellListProvider";
+import { useState, useEffect } from "react";
+import RoundedIconButton from "../components/RoundedIconButton";
 
 interface SpellListScreenProps {
   list: SpellList;
+  onSpellPressed: Function;
+  onNavigateToSpellSearchPressed: Function;
 }
 
 const SpellListScreen = (props: SpellListScreenProps) => {
+  SpellListProvider.getSpellLists();
+
+  const [spellIDs, setSpellIDs] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    let cancelled = false;
+    if (loading) {
+      const getSpells = async () => {
+        const spellListIds = await SpellListProvider.getSpellListSpellIDs(
+          props.list
+        );
+
+        if (!cancelled) {
+          setSpellIDs(spellListIds);
+          setLoading(false);
+        }
+      };
+      getSpells();
+    }
+    return () => {
+      cancelled = true;
+    };
+  }, [loading]);
+
   return (
     <View style={[styles.container, AppStyles.appBackground]}>
       <View style={[AppStyles.headerContainer, styles.headerContainer]}>
@@ -16,18 +46,31 @@ const SpellListScreen = (props: SpellListScreenProps) => {
           <Text style={AppStyles.headerText}>{props.list.name}</Text>
         </View>
         <View style={styles.headerImageContainer}>
-          <Image style={styles.listImage} source={{ uri: "" }} />
+          <Image
+            style={styles.listImage}
+            source={{ uri: props.list.thumbnailURI }}
+          />
         </View>
       </View>
       <View style={[AppStyles.edgePadding, styles.container]}>
-        <ScrollView>
-          {props.list.spellIDs.map(spellID => (
-            <SpellItemCompact
-              key={spellID.id}
-              spellID={spellID}
-              style={styles.spellItem}
+        <ScrollView contentContainerStyle={styles.scrollContainer}>
+          {spellIDs.length > 0 ? (
+            spellIDs.map(spellID => (
+              <SpellItemCompact
+                key={spellID.id}
+                spellID={spellID}
+                style={styles.spellItem}
+                onPress={() => props.onSpellPressed(spellID)}
+              />
+            ))
+          ) : (
+            <RoundedIconButton
+              text={"Add Spells"}
+              iconName={"ios-arrow-forward"}
+              disabled={false}
+              onPressed={props.onNavigateToSpellSearchPressed}
             />
-          ))}
+          )}
         </ScrollView>
       </View>
     </View>
@@ -59,5 +102,8 @@ const styles = StyleSheet.create({
   spellItem: {
     marginTop: 10,
     marginBottom: 20
+  },
+  scrollContainer: {
+    paddingTop: AppStyles.edgePadding.paddingHorizontal
   }
 });

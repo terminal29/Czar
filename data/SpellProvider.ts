@@ -28,11 +28,11 @@ export default class SpellProvider {
   private static levelList: string[] = [];
 
   private static db;
-  private static readonly dbName = "CZAR.db";
-  private static readonly spellTableName = "spells";
-  private static readonly sourceTableName = "sources";
+  public static readonly dbName = "CZAR.db";
+  public static readonly spellTableName = "spells";
+  public static readonly sourceTableName = "sources";
 
-  private static async getDB() {
+  public static async getDB() {
     if (!SpellProvider.db) {
       SpellProvider.db = await SQLite.openDatabase({
         name: SpellProvider.dbName
@@ -393,7 +393,7 @@ export default class SpellProvider {
     return spell;
   }
 
-  private static getRowData(response) {
+  public static getRowData(response) {
     const data = [];
     for (let i = 0; i < response[0].rows.length; i++) {
       data.push(response[0].rows.item(i));

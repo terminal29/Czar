@@ -13,6 +13,7 @@ interface SpellListAddScreenProps {
   existingList?: SpellList;
   onDone?: Function;
   onCancel?: Function;
+  onDelete?: Function;
 }
 
 let options = {
@@ -100,7 +101,7 @@ const SpellListAddScreen = (props: SpellListAddScreenProps) => {
       </View>
       <RoundedIconButton
         iconName={"ios-add"}
-        text={"Done"}
+        text={props.existingList ? "Save" : "Done"}
         disabled={!listName}
         onPressed={() => props?.onDone(makeListFromState())}
         onPressedWhileDisabled={() =>
@@ -110,6 +111,15 @@ const SpellListAddScreen = (props: SpellListAddScreenProps) => {
         }
         style={[styles.marginBottom]}
       />
+      {props.existingList && (
+        <RoundedIconButton
+          iconName={"ios-close"}
+          text={"Delete"}
+          disabled={false}
+          onPressed={() => props?.onDelete()}
+          style={[styles.marginBottom]}
+        />
+      )}
       <RoundedIconButton
         iconName={"ios-arrow-back"}
         text={"Cancel"}
