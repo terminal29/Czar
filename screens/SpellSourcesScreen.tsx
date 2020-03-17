@@ -32,7 +32,9 @@ const SpellSourcesScreen = (props: SpellSourcesScreenProps) => {
         <Text style={[AppStyles.headerText]}>Spell Sources</Text>
         <Text style={[AppStyles.headerSubtext]}>Manage your spell sources</Text>
       </View>
-      <View style={[AppStyles.edgePadding, styles.container]}>
+      <View
+        style={[AppStyles.edgePadding, styles.container, styles.topPadding]}
+      >
         <TouchableOpacity
           onPress={() =>
             props.onSpellSourcesReloaded && props.onSpellSourcesReloaded()
@@ -142,7 +144,9 @@ const styles = StyleSheet.create({
     flex: 1
   },
   sourceItem: {
-    marginTop: 10,
-    marginBottom: 20
+    marginBottom: AppStyles.edgePadding.paddingHorizontal
+  },
+  topPadding: {
+    paddingTop: AppStyles.edgePadding.paddingHorizontal
   }
 });

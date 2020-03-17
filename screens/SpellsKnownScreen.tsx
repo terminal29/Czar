@@ -19,6 +19,7 @@ import { useFocusEffect } from "@react-navigation/native";
 import nextFrame from "next-frame";
 import { createStackNavigator } from "@react-navigation/stack";
 import SpellInfoScreen from "./SpellInfoScreen";
+import Spinner from "react-native-spinkit";
 
 const SpellInfoPopupStack = createStackNavigator();
 
@@ -29,6 +30,7 @@ interface SpellsKnownScreenProps {
 const SpellsKnownScreen = (props: SpellsKnownScreenProps) => {
   const [filterBoxVisible, setFilterBoxVisibility] = useState(false);
   const [filteredSpellIDs, setFilteredSpellIDs] = useState<Array<SpellID>>([]);
+  const [loading, setLoading] = useState(false);
 
   const [spellName, setSpellName] = useState("");
 
@@ -43,6 +45,7 @@ const SpellsKnownScreen = (props: SpellsKnownScreenProps) => {
 
   useEffect(() => {
     let cancelled = false;
+    setLoading(true);
     const spellClass = selectedSpellClass !== "any" ? [selectedSpellClass] : [];
     const spellSchool =
       selectedSpellSchool !== "any" ? [selectedSpellSchool] : [];
@@ -56,33 +59,44 @@ const SpellsKnownScreen = (props: SpellsKnownScreenProps) => {
       );
       let nextSpell = await iterator.next();
       let shownSpells = [];
-      while (!cancelled && shownSpells.length <= 2 && !nextSpell.done) {
+      while (!cancelled && shownSpells.length <= 20 && !nextSpell.done) {
         if (nextSpell.value != null) {
           shownSpells.push(nextSpell.value);
           await nextFrame();
         }
         nextSpell = await iterator.next();
       }
-      setFilteredSpellIDs(shownSpells);
+      if (!cancelled) {
+        setLoading(false);
+        setFilteredSpellIDs(shownSpells);
+      }
     };
 
     getSpells();
+
     return () => {
       cancelled = true;
     };
   }, [spellName, selectedSpellClass, selectedSpellLevel, selectedSpellSchool]);
 
-  const updateClassList = (classList: Array<string>) =>
+  const updateClassList = (classList: Array<string>) => {
     setSpellClasses(classList.sort());
-  const updateLevelList = (levelList: Array<string>) =>
+    setLoading(false);
+  };
+  const updateLevelList = (levelList: Array<string>) => {
     setSpellLevels(levelList.sort());
-  const updateSchoolList = (schoolList: Array<string>) =>
+    setLoading(false);
+  };
+  const updateSchoolList = (schoolList: Array<string>) => {
     setSpellSchools(schoolList.sort());
+    setLoading(false);
+  };
 
   useEffect(() => {
     SpellProvider.observeClassList(updateClassList);
     SpellProvider.observeLevelList(updateLevelList);
     SpellProvider.observeSchoolList(updateSchoolList);
+    setLoading(true);
     return () => {
       SpellProvider.unObserveClassList(updateClassList);
       SpellProvider.unObserveLevelList(updateLevelList);
@@ -92,13 +106,6 @@ const SpellsKnownScreen = (props: SpellsKnownScreenProps) => {
 
   return (
     <View style={[AppStyles.appBackground, styles.container]}>
-      {filterBoxVisible && (
-        <TouchableWithoutFeedback onPress={() => setFilterBoxVisibility(false)}>
-          <View
-            style={[StyleSheet.absoluteFillObject, styles.backgroundOverlay]}
-          />
-        </TouchableWithoutFeedback>
-      )}
       <View style={[AppStyles.headerContainer, styles.headerHeightOverride]}>
         <Text style={[AppStyles.headerText]}>Spells Known</Text>
         <Text style={[AppStyles.headerSubtext]}>
@@ -125,14 +132,25 @@ const SpellsKnownScreen = (props: SpellsKnownScreenProps) => {
                 onPress={() => setFilterBoxVisibility(!filterBoxVisible)}
                 style={styles.searchFiltersButton}
               >
-                <Icon
-                  style={[
-                    AppStyles.inputPlaceholder,
-                    styles.searchFiltersButtonLines
-                  ]}
-                  name={"filter-list"}
-                  size={25}
-                ></Icon>
+                {!loading ? (
+                  <Icon
+                    style={[
+                      AppStyles.inputPlaceholder,
+                      styles.searchFiltersButtonLines
+                    ]}
+                    name={"filter-list"}
+                    size={25}
+                  />
+                ) : (
+                  <Spinner
+                    style={[
+                      AppStyles.inputPlaceholder,
+                      styles.searchFiltersButtonLines
+                    ]}
+                    type={"Circle"}
+                    size={25}
+                  />
+                )}
               </TouchableOpacity>
             </View>
             {filterBoxVisible && (
@@ -270,7 +288,10 @@ const SpellsKnownScreen = (props: SpellsKnownScreenProps) => {
         </View>
       </View>
       <View style={[AppStyles.edgePadding, styles.container]}>
-        <ScrollView style={AppStyles.appBackground}>
+        <ScrollView
+          style={AppStyles.appBackground}
+          contentContainerStyle={styles.scrollViewContainer}
+        >
           {filteredSpellIDs.map(spellID => (
             <SpellItemCompact
               key={spellID.id}
@@ -291,10 +312,11 @@ export default SpellsKnownScreen;
 
 const styles = StyleSheet.create({
   container: {
-    flex: 1
+    flex: 1,
+    zIndex: -1
   },
   headerHeightOverride: {
-    height: 200
+    zIndex: 1
   },
   boxBorder: {
     borderColor: AppStyles.boxBackground.backgroundColor,
@@ -326,11 +348,6 @@ const styles = StyleSheet.create({
     paddingRight: 20
   },
   searchFiltersButtonLines: { fontSize: 25 },
-  backgroundOverlay: {
-    backgroundColor: "#0f0f0f",
-    opacity: 0.9,
-    zIndex: 100
-  },
   subSearchBoxItemContainer: {
     flexDirection: "row"
   },
@@ -345,7 +362,9 @@ const styles = StyleSheet.create({
     textTransform: "capitalize"
   },
   spellListItem: {
-    marginTop: 10,
     marginBottom: 20
+  },
+  scrollViewContainer: {
+    paddingTop: AppStyles.edgePadding.paddingHorizontal
   }
 });

@@ -27,7 +27,7 @@ function DescriptionXML2ReactElements(
                 : [])
             ]}
           >
-            {object["_"]}
+            {object["_"].trim()}
           </Text>
         );
       } else {
@@ -44,22 +44,19 @@ function DescriptionXML2ReactElements(
                 : [])
             ]}
           >
-            {object["_"]}
+            {object["_"].trim()}
           </Text>
         );
       }
     }
     return DescriptionXML2ReactElements(object["_"], options);
-  }
-  if (object["p"]) {
+  } else if (object["p"]) {
     return DescriptionXML2ReactElements(object["p"], options);
-  }
-  if (Array.isArray(object)) {
+  } else if (Array.isArray(object)) {
     return object.map(subObject =>
       DescriptionXML2ReactElements(subObject, options)
     );
-  }
-  if (typeof object === "string" || object instanceof String) {
+  } else if (typeof object === "string" || object instanceof String) {
     return (
       <Text
         key={uuid()}
@@ -68,9 +65,12 @@ function DescriptionXML2ReactElements(
           ...(options ? (options.extraStyles ? options.extraStyles : []) : [])
         ]}
       >
-        {object}
+        {object.trim()}
       </Text>
     );
+  } else {
+    console.warn("Discarding description with unmatched type:");
+    console.warn(object);
   }
 }
 

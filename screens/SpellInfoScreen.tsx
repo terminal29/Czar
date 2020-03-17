@@ -115,6 +115,16 @@ const SpellInfoScreen = (props: SpellInfoScreenProps) => {
             </View>
             <View style={styles.infoBox}>
               <Text style={[AppStyles.smallHeaderSubtext, styles.leftInfoItem]}>
+                Casting Time
+              </Text>
+              <Text
+                style={[AppStyles.smallHeaderSubtext, styles.rightInfoItem]}
+              >
+                {spellInfo.time}
+              </Text>
+            </View>
+            <View style={styles.infoBox}>
+              <Text style={[AppStyles.smallHeaderSubtext, styles.leftInfoItem]}>
                 Range
               </Text>
               <Text
@@ -153,7 +163,9 @@ const SpellInfoScreen = (props: SpellInfoScreenProps) => {
               <Text style={[AppStyles.smallHeaderSubtext, styles.leftInfoItem]}>
                 Duration
               </Text>
-              <Text style={[AppStyles.smallHeaderSubtext]}>
+              <Text
+                style={[AppStyles.smallHeaderSubtext, styles.rightInfoItem]}
+              >
                 {spellInfo.duration}
               </Text>
             </View>
@@ -177,7 +189,7 @@ const SpellInfoScreen = (props: SpellInfoScreenProps) => {
                 {spellInfo.isConcentration ? "Yes" : "No"}
               </Text>
             </View>
-            <View>
+            <View style={styles.infoContainer}>
               <View>
                 {(() => {
                   if (descriptionXML) {
@@ -223,20 +235,25 @@ const styles = StyleSheet.create({
     paddingVertical: 20
   },
   headerMargin: {
-    marginBottom: 40
+    marginBottom: 20
   },
   infoBox: {
     flexDirection: "row",
-    marginTop: 2
+    marginTop: 3
   },
   leftInfoItem: {
-    flexBasis: 150
+    flexBasis: 160,
+    fontSize: 19
   },
   rightInfoItem: {
-    flex: 1
+    flex: 1,
+    fontSize: 17
+  },
+  infoContainer: {
+    marginTop: 20
   },
   textTopMargin: {
-    marginTop: 20
+    marginTop: 10
   },
   rightText: {
     textAlign: "right"
