@@ -17,13 +17,14 @@ const SpellListScreen = (props: SpellListScreenProps) => {
   const [spellIDs, setSpellIDs] = useState([]);
   const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
+  /*useEffect(() => {
     let cancelled = false;
     if (loading) {
       const getSpells = async () => {
         const spellListIds = await SpellListProvider.getSpellListSpellIDs(
           props.list
         );
+        
 
         if (!cancelled) {
           setSpellIDs(spellListIds);
@@ -35,7 +36,23 @@ const SpellListScreen = (props: SpellListScreenProps) => {
     return () => {
       cancelled = true;
     };
-  }, [loading]);
+  }, [loading]);*/
+
+  useEffect(() => {
+    let cancelled = false;
+    const updateSpellIDs = spellIDs => {
+      if (!cancelled) {
+        setSpellIDs(spellIDs);
+        setLoading(false);
+      }
+    };
+    setLoading(true);
+    SpellListProvider.observeSingleList(updateSpellIDs, props.list);
+    return () => {
+      cancelled = true;
+      SpellListProvider.unObserveSingleList(updateSpellIDs);
+    };
+  }, []);
 
   return (
     <View style={[styles.container, AppStyles.appBackground]}>

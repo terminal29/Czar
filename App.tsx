@@ -182,6 +182,39 @@ export default function App() {
     []
   );
 
+  const SpellListSpellPopupScreen = useCallback(
+    ({ route, navigation }) => (
+      <SpellInfoScreen
+        spellID={route.params.spellID}
+        extraButtons={[
+          <RoundedIconButton
+            key={"remove"}
+            onPressed={() => {
+              SpellListProvider.removeSpellIDFromList(
+                route.params.spellList,
+                route.params.spellID
+              );
+              navigation.goBack();
+            }}
+            text={"Remove from list"}
+            iconName={"ios-close"}
+            disabled={false}
+            style={styles.overlayButtonTopMargin}
+          />,
+          <RoundedIconButton
+            key={"back"}
+            onPressed={() => navigation.goBack()}
+            text={"Back"}
+            iconName={"ios-arrow-back"}
+            disabled={false}
+            style={styles.overlayButtonFullMargin}
+          />
+        ]}
+      />
+    ),
+    []
+  );
+
   const AddSpellListPopupScreen = useCallback(
     ({ route, navigation }) => (
       <SpellListAddScreen
@@ -201,7 +234,10 @@ export default function App() {
       <SpellListScreen
         list={route.params.list}
         onSpellPressed={(spellID: SpellID) => {
-          navigation.push("SpellPopupScreen", { spellID });
+          navigation.push("SpellListSpellPopupScreen", {
+            spellID,
+            spellList: route.params.list
+          });
         }}
         onNavigateToSpellSearchPressed={() => navigation.navigate("Search")}
       />
@@ -239,6 +275,9 @@ export default function App() {
         </Stack.Screen>
         <Stack.Screen name="AddToSpellListScreen">
           {AddSpellToSpellListScreen}
+        </Stack.Screen>
+        <Stack.Screen name="SpellListSpellPopupScreen">
+          {SpellListSpellPopupScreen}
         </Stack.Screen>
       </Stack.Navigator>
     </NavigationContainer>
