@@ -33,10 +33,11 @@ const SpellListAddScreen = (props: SpellListAddScreenProps) => {
   );
 
   const makeListFromState = () => {
-    const list = props.existingList ? props.existingList : new SpellList();
+    const list = props.existingList
+      ? props.existingList
+      : new SpellList(uuid(), listName, thumbnailURI);
     list.name = listName;
     list.thumbnailURI = thumbnailURI;
-    list.id = list.id ? list.id : uuid();
     return list;
   };
 

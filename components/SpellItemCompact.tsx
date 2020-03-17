@@ -150,7 +150,7 @@ const SpellItemCompact = (props: SpellItemCompactProps) => {
               Unable to load spell data.
             </Text>
             <Text style={AppStyles.headerSubtext}>
-              Reload spell database with the source this spell was from.
+              Reload the spell database from which this spell came from.
             </Text>
           </View>
         </View>

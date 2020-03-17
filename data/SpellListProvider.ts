@@ -17,7 +17,9 @@ export default class SpellListProvider {
     id: string;
   }[] = [];
 
-  public static observeSpellLists(callback: Function) {
+  public static async observeSpellLists(callback: Function) {
+    const spellLists = await this.getSpellLists();
+    callback(spellLists);
     this.spellListsListeners.push(callback);
   }
   public static unObserveSpellLists(callback: Function) {
@@ -60,10 +62,14 @@ export default class SpellListProvider {
             thumbnailURI TEXT
             );`);
 
+      await db.executeSql(
+        `DROP TABLE ${SpellListProvider.spellListSpellIDsTableName}`
+      );
       // ensure spell list ids table exists
       await db.executeSql(`CREATE TABLE IF NOT EXISTS ${SpellListProvider.spellListSpellIDsTableName}(
-            id TEXT PRIMARY KEY,
-            spellID TEXT NOT NULL
+            id TEXT NOT NULL,
+            spellID TEXT NOT NULL,
+            PRIMARY KEY (id, spellID)
             );`);
     }
     return db;
@@ -77,7 +83,7 @@ export default class SpellListProvider {
         `SELECT * from ${SpellListProvider.spellListSpellIDsTableName} where id='${list.id}'`
       )
     );
-    return ids.map(id => new SpellID(id.id));
+    return ids.map(id => new SpellID(id.spellID));
   }
 
   public static async addSpellIDToList(list: SpellList, id: SpellID) {

@@ -14,8 +14,6 @@ interface SpellListScreenProps {
 }
 
 const SpellListScreen = (props: SpellListScreenProps) => {
-  SpellListProvider.getSpellLists();
-
   const [spellIDs, setSpellIDs] = useState([]);
   const [loading, setLoading] = useState(true);
 
@@ -54,23 +52,21 @@ const SpellListScreen = (props: SpellListScreenProps) => {
       </View>
       <View style={[AppStyles.edgePadding, styles.container]}>
         <ScrollView contentContainerStyle={styles.scrollContainer}>
-          {spellIDs.length > 0 ? (
-            spellIDs.map(spellID => (
-              <SpellItemCompact
-                key={spellID.id}
-                spellID={spellID}
-                style={styles.spellItem}
-                onPress={() => props.onSpellPressed(spellID)}
-              />
-            ))
-          ) : (
-            <RoundedIconButton
-              text={"Add Spells"}
-              iconName={"ios-arrow-forward"}
-              disabled={false}
-              onPressed={props.onNavigateToSpellSearchPressed}
+          <RoundedIconButton
+            text={"Add Spells"}
+            iconName={"ios-arrow-forward"}
+            disabled={false}
+            onPressed={props.onNavigateToSpellSearchPressed}
+            style={[styles.bottomMargin]}
+          />
+          {spellIDs.map(spellID => (
+            <SpellItemCompact
+              key={spellID.id}
+              spellID={spellID}
+              style={styles.bottomMargin}
+              onPress={() => props.onSpellPressed(spellID)}
             />
-          )}
+          ))}
         </ScrollView>
       </View>
     </View>
@@ -99,8 +95,7 @@ const styles = StyleSheet.create({
   headerImageContainer: {
     flex: 0
   },
-  spellItem: {
-    marginTop: 10,
+  bottomMargin: {
     marginBottom: 20
   },
   scrollContainer: {

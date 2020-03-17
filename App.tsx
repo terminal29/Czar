@@ -18,6 +18,7 @@ import { SpellListAddBox } from "./components/SpellListAddBox";
 import SpellListAddScreen from "./screens/SpellListAddScreen";
 import { SpellID } from "./structs/SpellID";
 import SpellListProvider from "./data/SpellListProvider";
+import AddToSpellListScreen from "./screens/AddToSpellListScreen";
 
 const Tab = createBottomTabNavigator();
 const Stack = createStackNavigator();
@@ -157,9 +158,11 @@ export default function App() {
         extraButtons={[
           <RoundedIconButton
             key={"add"}
-            onPressed={() => {
-              Toast.show("Not implemented yet");
-            }}
+            onPressed={() =>
+              navigation.push("AddToSpellListScreen", {
+                spellID: route.params.spellID
+              })
+            }
             text={"Add to List"}
             iconName={"ios-add"}
             disabled={false}
@@ -206,6 +209,23 @@ export default function App() {
     []
   );
 
+  const AddSpellToSpellListScreen = useCallback(
+    ({ route, navigation }) => {
+      return (
+        <AddToSpellListScreen
+          spellID={route.params.spellID}
+          spellLists={spellLists}
+          onListPressed={(list: SpellList) => {
+            SpellListProvider.addSpellIDToList(list, route.params.spellID);
+            navigation.goBack();
+          }}
+          onCancelPressed={() => navigation.goBack()}
+        />
+      );
+    },
+    [spellLists, SingleSpellListScreen]
+  );
+
   return (
     <NavigationContainer>
       <Stack.Navigator headerMode="none" initialRouteName="MainApp">
@@ -216,6 +236,9 @@ export default function App() {
         </Stack.Screen>
         <Stack.Screen name="SpellListScreen">
           {SingleSpellListScreen}
+        </Stack.Screen>
+        <Stack.Screen name="AddToSpellListScreen">
+          {AddSpellToSpellListScreen}
         </Stack.Screen>
       </Stack.Navigator>
     </NavigationContainer>
