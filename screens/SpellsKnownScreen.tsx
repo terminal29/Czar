@@ -11,17 +11,12 @@ import {
 } from "react-native";
 import { AppStyles } from "../styles/AppStyles";
 import Icon from "react-native-vector-icons/MaterialIcons";
-import { useState, useCallback, useEffect } from "react";
+import { useState, useEffect } from "react";
 import SpellProvider from "../data/SpellProvider";
 import SpellItemCompact from "../components/SpellItemCompact";
 import { SpellID } from "../structs/SpellID";
-import { useFocusEffect } from "@react-navigation/native";
 import nextFrame from "next-frame";
-import { createStackNavigator } from "@react-navigation/stack";
-import SpellInfoScreen from "./SpellInfoScreen";
 import Spinner from "react-native-spinkit";
-
-const SpellInfoPopupStack = createStackNavigator();
 
 interface SpellsKnownScreenProps {
   onSpellPressed?: Function;

@@ -1,7 +1,8 @@
-import { SpellID } from './SpellID';
+import { SpellID } from "./SpellID";
 
-export class SpellList{
-    name:string;
-    thumbnailURL:string;
-    spellIDs:SpellID[];
+export class SpellList {
+  id: string;
+  name: string;
+  thumbnailURI: string;
+  spellIDs: SpellID[];
 }

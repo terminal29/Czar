@@ -3,9 +3,12 @@ import { Text, View, StyleSheet, Button, ScrollView } from "react-native";
 import { SpellList } from "../structs/SpellList";
 import { AppStyles } from "../styles/AppStyles";
 import { SpellListItemCompact } from "../components/SpellListItemCompact";
+import { SpellListAddBox } from "../components/SpellListAddBox";
 
 interface SpellListsScreenProps {
   spellLists: SpellList[];
+  onListPressed?: Function;
+  onAddListPressed?: Function;
 }
 
 const SpellListsScreen = (props: SpellListsScreenProps) => {
@@ -17,13 +20,23 @@ const SpellListsScreen = (props: SpellListsScreenProps) => {
           Manage your characters' spells
         </Text>
       </View>
-      <View style={[AppStyles.edgePadding]}>
-        <ScrollView>
-          <View style={styles.spellListsScroll}>
-            {props.spellLists.map(spellList => (
-              <SpellListItemCompact list={spellList} />
-            ))}
-          </View>
+      <View style={[AppStyles.edgePadding, styles.container]}>
+        <ScrollView contentContainerStyle={styles.spellListsScroll}>
+          {props.spellLists.map(spellList => (
+            <SpellListItemCompact
+              key={spellList.id}
+              list={spellList}
+              onPress={() =>
+                props.onListPressed && props.onListPressed(spellList)
+              }
+            />
+          ))}
+          <SpellListAddBox
+            key={"addBox"}
+            onPress={() => {
+              props.onAddListPressed && props.onAddListPressed();
+            }}
+          ></SpellListAddBox>
         </ScrollView>
       </View>
     </View>
@@ -35,8 +48,9 @@ export default SpellListsScreen;
 const styles = StyleSheet.create({
   container: { flex: 1 },
   spellListsScroll: {
+    paddingTop: 20,
     flexDirection: "row",
     flexWrap: "wrap",
-    justifyContent: "space-evenly"
+    alignItems: "flex-start"
   }
 });

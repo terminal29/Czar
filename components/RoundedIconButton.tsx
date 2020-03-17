@@ -8,6 +8,7 @@ interface RoundedIconButtonProps {
   text: string;
   iconName: string;
   onPressed?: Function;
+  onPressedWhileDisabled?: Function;
   disabled: boolean;
 }
 
@@ -20,11 +21,22 @@ const RoundedIconButton = (props: RoundedIconButtonProps) => {
         styles.container,
         props.style
       ]}
-      onPress={() => props.onPressed && props.onPressed()}
-      disabled={props.disabled}
+      onPress={() =>
+        props.disabled
+          ? props.onPressedWhileDisabled && props.onPressedWhileDisabled()
+          : props.onPressed && props.onPressed()
+      }
     >
       <View style={styles.sourceURL}>
-        <Text style={[AppStyles.headerSubtext, { flex: 0 }]}>{props.text}</Text>
+        <Text
+          style={[
+            AppStyles.headerSubtext,
+            props.disabled && styles.sourceDeleteButtonXDisabled,
+            { flex: 0 }
+          ]}
+        >
+          {props.text}
+        </Text>
       </View>
       <View style={styles.sourceDeleteButton}>
         <Icon

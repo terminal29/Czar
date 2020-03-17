@@ -14,49 +14,13 @@ import SpellProvider from "./data/SpellProvider";
 import { createStackNavigator } from "@react-navigation/stack";
 import RoundedIconButton from "./components/RoundedIconButton";
 import Toast from "react-native-root-toast";
+import { SpellListAddBox } from "./components/SpellListAddBox";
+import SpellListAddScreen from "./screens/SpellListAddScreen";
 
 const Tab = createBottomTabNavigator();
 const Stack = createStackNavigator();
 export default function App() {
-  const spellLists: Array<SpellList> = [
-    {
-      name: "Wizzo the Wizard",
-      thumbnailURL: "a",
-      spellIDs: [
-        { id: "1212" },
-        { id: "2121" },
-        { id: "1212" },
-        { id: "2121" },
-        { id: "1212" },
-        { id: "2121" }
-      ]
-    },
-    {
-      name: "Clarence the Cleric",
-      thumbnailURL: "a",
-      spellIDs: [{ id: "1212" }, { id: "2121" }]
-    },
-    {
-      name: "Sal the Sorcerer",
-      thumbnailURL: "a",
-      spellIDs: [{ id: "1212" }, { id: "2121" }]
-    },
-    {
-      name: "Perry the Paladin",
-      thumbnailURL: "a",
-      spellIDs: [{ id: "1212" }, { id: "2121" }]
-    },
-    {
-      name: "Wam the Warlock",
-      thumbnailURL: "a",
-      spellIDs: [{ id: "1212" }, { id: "2121" }]
-    },
-    {
-      name: "Alberto the Artificer",
-      thumbnailURL: "a",
-      spellIDs: [{ id: "1212" }, { id: "2121" }]
-    }
-  ];
+  const [spellLists, setSpellLists] = useState<Array<SpellList>>([]);
 
   const [spellSources, setSpellSources] = useState([]);
   const [spellsLoading, setSpellsLoading] = useState(false);
@@ -104,7 +68,15 @@ export default function App() {
     [spellSources, spellsLoading, setSpellsLoading, updateSourceURLs]
   );
   const ListsScreen = useCallback(
-    () => <SpellListsScreen spellLists={spellLists} />,
+    ({ navigation }) => (
+      <SpellListsScreen
+        spellLists={spellLists}
+        onAddListPressed={() => navigation.push("SpellListAddScreen")}
+        onListPressed={id => {
+          navigation.push("SpellListScreen");
+        }}
+      />
+    ),
     [spellLists]
   );
   const KnownScreen = useCallback(
@@ -153,7 +125,7 @@ export default function App() {
           showLabel: false,
           style: { ...styles.tabBar }
         }}
-        initialRouteName={"Search"}
+        initialRouteName={"Spells"}
       >
         <Tab.Screen name="Sources">{SourcesScreen}</Tab.Screen>
         <Tab.Screen name="Spells">{ListsScreen}</Tab.Screen>
@@ -170,7 +142,9 @@ export default function App() {
         extraButtons={[
           <RoundedIconButton
             key={"add"}
-            onPressed={() => Toast.show("Not implemented yet ;)")}
+            onPressed={(newList: SpellList) => {
+              Toast.show("Not implemented yet");
+            }}
             text={"Add to List"}
             iconName={"ios-add"}
             disabled={false}
@@ -190,11 +164,30 @@ export default function App() {
     []
   );
 
+  const AddSpellPopupScreen = useCallback(
+    ({ route, navigation }) => (
+      <SpellListAddScreen
+        onDone={newList => {
+          const newLists = spellLists.filter(list => list.id !== newList.id);
+          newLists.push(newList);
+          setSpellLists(newLists);
+          navigation.goBack();
+          console.log("Added new spell list");
+        }}
+        onCancel={() => navigation.goBack()}
+      />
+    ),
+    [spellLists]
+  );
+
   return (
     <NavigationContainer>
       <Stack.Navigator headerMode="none" initialRouteName="MainApp">
         <Stack.Screen name="MainAppScreen">{MainAppScreen}</Stack.Screen>
         <Stack.Screen name="SpellPopupScreen">{SpellPopupScreen}</Stack.Screen>
+        <Stack.Screen name="SpellListAddScreen">
+          {AddSpellPopupScreen}
+        </Stack.Screen>
       </Stack.Navigator>
     </NavigationContainer>
   );
