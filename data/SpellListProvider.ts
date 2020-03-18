@@ -32,7 +32,9 @@ export default class SpellListProvider {
     this.spellListsListeners.forEach(listener => listener(spellLists));
   }
 
-  public static observeSingleList(callback: Function, list: SpellList) {
+  public static async observeSingleList(callback: Function, list: SpellList) {
+    const spellIDs = await SpellListProvider.getSpellListSpellIDs(list);
+    callback(spellIDs);
     this.singleSpellListListener.push({ callback, id: list.id });
   }
   public static unObserveSingleList(callback: Function) {
@@ -62,9 +64,6 @@ export default class SpellListProvider {
             thumbnailURI TEXT
             );`);
 
-      await db.executeSql(
-        `DROP TABLE ${SpellListProvider.spellListSpellIDsTableName}`
-      );
       // ensure spell list ids table exists
       await db.executeSql(`CREATE TABLE IF NOT EXISTS ${SpellListProvider.spellListSpellIDsTableName}(
             id TEXT NOT NULL,

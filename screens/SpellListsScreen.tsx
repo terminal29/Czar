@@ -9,6 +9,7 @@ interface SpellListsScreenProps {
   spellLists: SpellList[];
   onListPressed?: Function;
   onAddListPressed?: Function;
+  onListLongPressed?: Function;
 }
 
 const SpellListsScreen = (props: SpellListsScreenProps) => {
@@ -29,6 +30,9 @@ const SpellListsScreen = (props: SpellListsScreenProps) => {
               onPress={() =>
                 props.onListPressed && props.onListPressed(spellList)
               }
+              onLongPress={() => {
+                props.onListLongPressed && props.onListLongPressed(spellList);
+              }}
             />
           ))}
           <SpellListAddBox

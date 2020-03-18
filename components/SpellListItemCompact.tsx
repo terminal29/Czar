@@ -7,12 +7,16 @@ import { TouchableOpacity } from "react-native-gesture-handler";
 interface SpellListItemCompactProps {
   list: SpellList;
   onPress?: Function;
+  onLongPress?: Function;
 }
 
 const SpellListItemCompact = (props: SpellListItemCompactProps) => {
   return (
     <View style={styles.container}>
-      <TouchableOpacity onPress={() => props.onPress && props.onPress()}>
+      <TouchableOpacity
+        onPress={() => props.onPress && props.onPress()}
+        onLongPress={() => props.onLongPress && props.onLongPress()}
+      >
         <Image
           style={styles.cardImage}
           source={{ uri: props.list.thumbnailURI }}

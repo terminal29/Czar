@@ -17,27 +17,6 @@ const SpellListScreen = (props: SpellListScreenProps) => {
   const [spellIDs, setSpellIDs] = useState([]);
   const [loading, setLoading] = useState(true);
 
-  /*useEffect(() => {
-    let cancelled = false;
-    if (loading) {
-      const getSpells = async () => {
-        const spellListIds = await SpellListProvider.getSpellListSpellIDs(
-          props.list
-        );
-        
-
-        if (!cancelled) {
-          setSpellIDs(spellListIds);
-          setLoading(false);
-        }
-      };
-      getSpells();
-    }
-    return () => {
-      cancelled = true;
-    };
-  }, [loading]);*/
-
   useEffect(() => {
     let cancelled = false;
     const updateSpellIDs = spellIDs => {

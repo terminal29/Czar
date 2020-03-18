@@ -91,6 +91,9 @@ export default function App() {
         onListPressed={list => {
           navigation.push("SpellListScreen", { list });
         }}
+        onListLongPressed={list => {
+          navigation.push("ModifySpellListScreen", { list });
+        }}
       />
     ),
     [spellLists]
@@ -229,6 +232,28 @@ export default function App() {
     []
   );
 
+  const ModifySpellListScreen = useCallback(
+    ({ route, navigation }) => (
+      <SpellListAddScreen
+        existingList={route.params.list}
+        onDone={newList => {
+          // submit new list to lists
+          SpellListProvider.removeSpellList(route.params.list);
+          SpellListProvider.addSpellList(newList);
+          navigation.goBack();
+        }}
+        onDelete={() => {
+          SpellListProvider.removeSpellList(route.params.list);
+          navigation.goBack();
+        }}
+        onCancel={() => {
+          navigation.goBack();
+        }}
+      />
+    ),
+    []
+  );
+
   const SingleSpellListScreen = useCallback(
     ({ route, navigation }) => (
       <SpellListScreen
@@ -275,6 +300,9 @@ export default function App() {
         </Stack.Screen>
         <Stack.Screen name="AddToSpellListScreen">
           {AddSpellToSpellListScreen}
+        </Stack.Screen>
+        <Stack.Screen name="ModifySpellListScreen">
+          {ModifySpellListScreen}
         </Stack.Screen>
         <Stack.Screen name="SpellListSpellPopupScreen">
           {SpellListSpellPopupScreen}
