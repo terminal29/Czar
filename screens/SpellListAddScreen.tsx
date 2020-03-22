@@ -1,13 +1,20 @@
 import * as React from "react";
-import { Text, View, StyleSheet, ScrollView, Image } from "react-native";
+import {
+  Text,
+  View,
+  StyleSheet,
+  ScrollView,
+  Image,
+  TextInput,
+  TouchableOpacity
+} from "react-native";
 import { useState } from "react";
-import { AppStyles } from "../styles/AppStyles";
 import { SpellList } from "../structs/SpellList";
-import { TextInput, TouchableOpacity } from "react-native-gesture-handler";
-import RoundedIconButton from "../components/RoundedIconButton";
 import ImagePicker from "react-native-image-picker";
 import Toast from "react-native-root-toast";
 import { v4 as uuid } from "react-native-uuid";
+import { StyleProvider } from "../data/StyleProvider";
+import MdIcon from "react-native-vector-icons/MaterialIcons";
 
 interface SpellListAddScreenProps {
   existingList?: SpellList;
@@ -43,92 +50,101 @@ const SpellListAddScreen = (props: SpellListAddScreenProps) => {
 
   const showPicker = () => {
     ImagePicker.showImagePicker(options, response => {
-      console.log("Response = ", response);
       if (response.error) {
-        console.log("ImagePicker Error: ", response.error);
         Toast.show("Unable to load image");
-      } else {
+      } else if (response.data) {
         setThumbnailURI(`data:image/jpeg;base64,${response.data}`);
       }
     });
   };
 
-  return (
-    <ScrollView
-      style={[AppStyles.appBackground, styles.container]}
-      contentContainerStyle={{
-        padding: AppStyles.edgePadding.paddingHorizontal
-      }}
+  const isValid = (): boolean => !!(thumbnailURI && listName);
+
+  const makeButton = (enabled: boolean, text: string, onPress: Function) => (
+    <TouchableOpacity
+      style={styles.buttonContainer}
+      disabled={!enabled}
+      onPress={() => onPress()}
     >
-      <View
+      <Text
         style={[
-          AppStyles.boxRounded,
-          AppStyles.boxBackground,
-          styles.innerBox,
-          styles.marginBottom
+          enabled
+            ? StyleProvider.styles.listItemTextStrong
+            : StyleProvider.styles.listItemTextWeak,
+          styles.buttonText
         ]}
       >
-        <Text style={[AppStyles.headerText, styles.marginBottom]}>
-          {props.existingList ? "Modify" : "Add"} Spell List
-        </Text>
-        <TextInput
-          value={listName}
-          onChangeText={text => setListName(text)}
+        {text}
+      </Text>
+      <View style={styles.chevronContainer}>
+        <MdIcon
+          size={20}
+          name={"chevron-right"}
           style={[
-            AppStyles.headerSubtext,
-            styles.nameInput,
-            styles.boxBorder,
-            styles.marginBottom
+            enabled
+              ? StyleProvider.styles.listItemTextStrong
+              : StyleProvider.styles.listItemTextWeak
           ]}
-          placeholderTextColor={AppStyles.inputPlaceholder.color}
-          placeholder={"List name..."}
         />
-        <TouchableOpacity
-          style={[styles.imageContainer, styles.boxBorder]}
-          onPress={() => showPicker()}
-        >
-          {thumbnailURI ? (
-            <Image
-              style={styles.imageThumbnail}
-              resizeMode={"cover"}
-              source={{ uri: thumbnailURI }}
-            />
-          ) : (
-            <View>
-              <Text style={[AppStyles.inputPlaceholder]}>Add an image</Text>
-            </View>
-          )}
-        </TouchableOpacity>
       </View>
-      <RoundedIconButton
-        iconName={"ios-add"}
-        text={props.existingList ? "Save" : "Done"}
-        disabled={!listName}
-        onPressed={() => props?.onDone(makeListFromState())}
-        onPressedWhileDisabled={() =>
-          Toast.show("Your spell list must have a name.", {
-            duration: Toast.durations.LONG
-          })
-        }
-        style={[styles.marginBottom]}
-      />
-      {props.existingList && (
-        <RoundedIconButton
-          iconName={"ios-close"}
-          text={"Delete"}
-          disabled={false}
-          onPressed={() => props?.onDelete()}
-          style={[styles.marginBottom]}
-        />
-      )}
-      <RoundedIconButton
-        iconName={"ios-arrow-back"}
-        text={"Cancel"}
-        disabled={false}
-        onPressed={() => props?.onCancel()}
-        style={[styles.marginBottom]}
-      />
-    </ScrollView>
+    </TouchableOpacity>
+  );
+
+  return (
+    <View style={[styles.container, StyleProvider.styles.mainBackground]}>
+      <View style={[styles.pageTitleContainer]}>
+        <Text style={StyleProvider.styles.pageTitleText}>
+          {props.existingList ? "Edit Spell List" : "New Spell List"}
+        </Text>
+      </View>
+      <ScrollView contentContainerStyle={styles.scrollContainerPadding}>
+        <View style={styles.cardContainer}>
+          <TouchableOpacity onPress={showPicker}>
+            <Image style={styles.cardImage} source={{ uri: thumbnailURI }} />
+            <Text
+              style={[
+                StyleProvider.styles.listItemTextStrong,
+                styles.cardPictureEditText,
+                styles.cardPictureEditTextUnderlay
+              ]}
+            >
+              {thumbnailURI ? "Change picture..." : "Add a picture..."}
+            </Text>
+            <Text
+              style={[
+                StyleProvider.styles.listItemTextStrong,
+                styles.cardPictureEditText
+              ]}
+            >
+              {thumbnailURI ? "Change picture..." : "Add a picture..."}
+            </Text>
+          </TouchableOpacity>
+          <View style={styles.cardInfoContainer}>
+            <TextInput
+              numberOfLines={1}
+              style={[
+                StyleProvider.styles.listItemTextStrong,
+                styles.cardTitle
+              ]}
+              value={listName}
+              onChangeText={text => setListName(text)}
+              placeholder="Enter a name..."
+              placeholderTextColor={StyleProvider.styles.listItemTextWeak.color}
+            />
+          </View>
+        </View>
+
+        {makeButton(isValid(), "Finish", () =>
+          props.onDone?.(makeListFromState())
+        )}
+        {props.existingList &&
+          makeButton(true, "Delete", () =>
+            props.onDelete?.(props.existingList)
+          )}
+
+        {makeButton(true, "Cancel", () => props.onCancel?.(props.existingList))}
+      </ScrollView>
+    </View>
   );
 };
 
@@ -138,32 +154,65 @@ const styles = StyleSheet.create({
   container: {
     flex: 1
   },
-  innerBox: {
-    padding: 20
+  pageTitleContainer: {
+    height: 93,
+    borderBottomColor: StyleProvider.styles.listItemDivider.borderColor,
+    borderBottomWidth: StyleProvider.styles.listItemDivider.borderWidth,
+    borderStyle: StyleProvider.styles.listItemDivider.borderStyle,
+    justifyContent: "center",
+    alignItems: "center"
   },
-  boxBorder: {
-    borderColor: AppStyles.appBackground.backgroundColor,
-    borderWidth: 2,
-    borderRadius: AppStyles.boxRounded.borderRadius
+  scrollContainerPadding: {
+    padding: StyleProvider.styles.edgePadding.padding
   },
-  marginBottom: {
-    marginBottom: AppStyles.edgePadding.paddingHorizontal
-  },
-  nameInput: {
-    padding: 13,
-    flex: 1,
-    paddingLeft: 20,
-    fontSize: 20
-  },
-  imageContainer: {
+  cardImage: {
     width: "100%",
     height: 150,
-    backgroundColor: AppStyles.appBackground.backgroundColor,
+    resizeMode: "stretch"
+  },
+  cardTitle: {
+    flex: 1,
+    paddingLeft: StyleProvider.styles.edgePadding.padding,
+    paddingVertical: StyleProvider.styles.edgePadding.padding - 5
+  },
+  cardPictureEditText: {
+    position: "absolute",
+    bottom: StyleProvider.styles.edgePadding.padding,
+    left: StyleProvider.styles.edgePadding.padding
+  },
+  cardPictureEditTextUnderlay: {
+    color: StyleProvider.styles.mainBackground.backgroundColor,
+    bottom: StyleProvider.styles.edgePadding.padding - 1,
+
+    left: StyleProvider.styles.edgePadding.padding - 1
+  },
+  cardInfoContainer: {
+    flexDirection: "row"
+  },
+  cardContainer: {
+    borderBottomColor: StyleProvider.styles.listItemDivider.borderColor,
+    borderBottomWidth: StyleProvider.styles.listItemDivider.borderWidth,
+    borderStyle: StyleProvider.styles.listItemDivider.borderStyle,
+    marginBottom: StyleProvider.styles.edgePadding.padding
+  },
+  buttonContainer: {
+    borderBottomColor: StyleProvider.styles.listItemDivider.borderColor,
+    borderBottomWidth: StyleProvider.styles.listItemDivider.borderWidth,
+    borderTopColor: StyleProvider.styles.listItemDivider.borderColor,
+    borderTopWidth: StyleProvider.styles.listItemDivider.borderWidth,
+    borderStyle: StyleProvider.styles.listItemDivider.borderStyle,
+    padding: StyleProvider.styles.edgePadding.padding,
+    paddingRight: StyleProvider.styles.edgePadding.padding - 10,
+    flexDirection: "row",
+    marginBottom: StyleProvider.styles.edgePadding.padding
+  },
+  buttonText: {
+    flex: 1
+  },
+  chevronContainer: {
+    marginVertical: -10,
+    flex: 0,
     alignItems: "center",
     justifyContent: "center"
-  },
-  imageThumbnail: {
-    flex: 1,
-    alignSelf: "stretch"
   }
 });
