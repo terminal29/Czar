@@ -61,47 +61,46 @@ const SpellItemCompact = (props: SpellItemCompactProps) => {
     };
   }, [spellInfo]);
 
+  const getVSMString = () =>
+    `${spellInfo.hasMaterialComponent ? "V" : ""}${
+      spellInfo.hasSomaticComponent ? "S" : ""
+    }${spellInfo.hasMaterialComponent ? "M" : ""}`;
+
+  const getCRString = () =>
+    `${spellInfo.isConcentration ? "C" : ""}${spellInfo.isRitual ? "R" : ""}`;
+
   return (
-    <View
-      style={[
-        styles.container,
-        AppStyles.boxBackground,
-        AppStyles.boxRounded,
-        props.style
-      ]}
-    >
+    <View style={[styles.container, AppStyles.boxBackground, props.style]}>
       {loading ? (
         <View style={styles.center}>
           <Spinner type={"Wave"} color={AppStyles.smallHeaderText.color} />
         </View>
       ) : spellInfo ? (
-        <TouchableOpacity onPress={() => props.onPress && props.onPress()}>
-          <View style={styles.mainContainer}>
-            <View style={styles.leftContainer}>
-              <Text style={AppStyles.smallHeaderText}>{spellInfo.name}</Text>
-              <View style={styles.smallDescriptionContainer}>
-                {(() => {
-                  if (spellDescXML) {
-                    const comps = DescriptionFormatter.DescriptionXML2ReactElements(
-                      spellDescXML
-                    );
-                    if (Array.isArray(comps)) {
-                      if (comps.length > 0) {
-                        comps[0] = React.cloneElement(comps[0], {
-                          numberOfLines: 4
-                        });
-                      }
-                    }
-                    return comps[0];
-                  }
-                })()}
-              </View>
+        <TouchableOpacity
+          style={styles.mainContainer}
+          onPress={() => props.onPress && props.onPress()}
+        >
+          <View style={styles.leftContainer} />
+          <View style={styles.rightContainer}>
+            <View style={styles.spellNameContainer}>
+              <Text
+                style={[
+                  styles.spellName,
+                  AppStyles.appFont,
+                  AppStyles.headingTextColor
+                ]}
+              >
+                {spellInfo.name}
+              </Text>
             </View>
-            <View style={styles.rightContainer}>
+            <View style={styles.spellInfoContainer}>
               <Text
                 numberOfLines={1}
-                ellipsizeMode="tail"
-                style={AppStyles.smallHeaderSubtext}
+                style={[
+                  styles.spellInfoString,
+                  AppStyles.appFont,
+                  AppStyles.subheadingTextColor
+                ]}
               >
                 {spellInfo.level === "0"
                   ? "Cantrip"
@@ -109,51 +108,55 @@ const SpellItemCompact = (props: SpellItemCompactProps) => {
               </Text>
               <Text
                 numberOfLines={1}
-                ellipsizeMode="tail"
                 style={[
-                  AppStyles.smallHeaderSubtext,
-                  styles.spellSmallInfoMargin
+                  styles.spellInfoString,
+                  AppStyles.appFont,
+                  AppStyles.subheadingTextColor
                 ]}
               >
                 {spellInfo.time}
               </Text>
               <Text
                 numberOfLines={1}
-                ellipsizeMode="tail"
                 style={[
-                  AppStyles.smallHeaderSubtext,
-                  styles.spellSmallInfoMargin
-                ]}
-              >
-                {spellInfo.hasMaterialComponent ? "V" : ""}
-                {spellInfo.hasSomaticComponent ? "S" : ""}
-                {spellInfo.hasMaterialComponent ? "M" : ""}
-              </Text>
-              <Text
-                numberOfLines={1}
-                ellipsizeMode="tail"
-                style={[
-                  AppStyles.smallHeaderSubtext,
-                  styles.spellSmallInfoMargin
+                  styles.spellInfoString,
+                  AppStyles.appFont,
+                  AppStyles.subheadingTextColor,
+                  { flexShrink: 1 }
                 ]}
               >
                 {spellInfo.range}
               </Text>
+              {getVSMString().length > 0 && (
+                <Text
+                  numberOfLines={1}
+                  style={[
+                    styles.spellInfoString,
+                    AppStyles.appFont,
+                    AppStyles.subheadingTextColor
+                  ]}
+                >
+                  {getVSMString()}
+                </Text>
+              )}
+
+              {getCRString().length > 0 && (
+                <Text
+                  numberOfLines={1}
+                  style={[
+                    styles.spellInfoString,
+                    AppStyles.appFont,
+                    AppStyles.subheadingTextColor
+                  ]}
+                >
+                  {getCRString()}
+                </Text>
+              )}
             </View>
           </View>
         </TouchableOpacity>
       ) : (
-        <View style={styles.infoContainer}>
-          <Text style={AppStyles.smallHeaderSubtext}>{props.spellID.id}</Text>
-          <View style={styles.infoContainer}>
-            <Text style={AppStyles.headerSubtext}>
-              Unable to load spell data.
-            </Text>
-            <Text style={AppStyles.headerSubtext}>
-              Reload the spell database from which this spell came from.
-            </Text>
-          </View>
-        </View>
+        <View style={styles.infoContainer}></View>
       )}
     </View>
   );
@@ -163,8 +166,7 @@ export default SpellItemCompact;
 
 const styles = StyleSheet.create({
   container: {
-    paddingHorizontal: 20,
-    paddingVertical: 20
+    height: 60
   },
   subHeaderContainer: {
     marginTop: 5,
@@ -182,20 +184,33 @@ const styles = StyleSheet.create({
     margin: 20
   },
   leftContainer: {
-    flex: 1
+    flexBasis: 35
   },
   rightContainer: {
-    flex: 0,
-    flexBasis: 90,
-    marginLeft: 20,
-    justifyContent: "space-between"
+    flex: 1,
+    flexDirection: "column"
   },
   spellSmallInfoMargin: {},
   mainContainer: {
     flex: 1,
-    flexDirection: "row"
+    flexDirection: "row",
+    alignItems: "center"
   },
   smallDescriptionContainer: {
     marginTop: 10
+  },
+  spellNameContainer: { flex: 0, marginTop: 6, height: 34 },
+  spellName: {
+    fontSize: 30
+  },
+  spellInfoContainer: {
+    flex: 1,
+    flexDirection: "row",
+    justifyContent: "flex-start",
+    flexWrap: "nowrap"
+  },
+  spellInfoString: {
+    fontSize: 13,
+    marginRight: 12
   }
 });

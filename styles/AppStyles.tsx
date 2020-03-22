@@ -53,6 +53,15 @@ const AppStyles = StyleSheet.create({
     fontSize: 15,
     color: "#A7A7A7",
     fontFamily: "Rubik-Regular"
+  },
+  appFont: {
+    fontFamily: "Rubik-Regular"
+  },
+  headingTextColor: {
+    color: "#E8E8E8"
+  },
+  subheadingTextColor: {
+    color: "#C9C9C9"
   }
 });
 

@@ -1,22 +1,12 @@
 import * as React from "react";
-import {
-  Text,
-  View,
-  StyleSheet,
-  TextInput,
-  Picker,
-  TouchableOpacity,
-  TouchableWithoutFeedback,
-  ScrollView
-} from "react-native";
-import { AppStyles } from "../styles/AppStyles";
-import Icon from "react-native-vector-icons/MaterialIcons";
+import { Text, View, StyleSheet, TextInput, Picker } from "react-native";
+import MdIcon from "react-native-vector-icons/MaterialIcons";
 import { useState, useEffect } from "react";
 import SpellProvider from "../data/SpellProvider";
-import SpellItemCompact from "../components/SpellItemCompact";
 import { SpellID } from "../structs/SpellID";
 import nextFrame from "next-frame";
-import Spinner from "react-native-spinkit";
+import { StyleProvider } from "../data/StyleProvider";
+import { TouchableOpacity } from "react-native-gesture-handler";
 
 interface SpellsKnownScreenProps {
   onSpellPressed?: Function;
@@ -53,17 +43,21 @@ const SpellsKnownScreen = (props: SpellsKnownScreenProps) => {
         spellLevel
       );
       let nextSpell = await iterator.next();
-      let shownSpells = [];
-      while (!cancelled && shownSpells.length <= 20 && !nextSpell.done) {
+      let additionalShownSpells = [];
+      while (!cancelled && !nextSpell.done) {
         if (nextSpell.value != null) {
-          shownSpells.push(nextSpell.value);
+          additionalShownSpells.push(nextSpell.value);
           await nextFrame();
+        }
+        if (additionalShownSpells.length == 20) {
+          setFilteredSpellIDs([...filteredSpellIDs, ...additionalShownSpells]);
+          additionalShownSpells = [];
         }
         nextSpell = await iterator.next();
       }
       if (!cancelled) {
         setLoading(false);
-        setFilteredSpellIDs(shownSpells);
+        setFilteredSpellIDs([...filteredSpellIDs, ...additionalShownSpells]);
       }
     };
 
@@ -99,206 +93,109 @@ const SpellsKnownScreen = (props: SpellsKnownScreenProps) => {
     };
   }, []);
 
-  return (
-    <View style={[AppStyles.appBackground, styles.container]}>
-      <View style={[AppStyles.headerContainer, styles.headerHeightOverride]}>
-        <Text style={[AppStyles.headerText]}>Spells Known</Text>
-        <Text style={[AppStyles.headerSubtext]}>
-          Find a spell by name, class, school, or level
-        </Text>
-
-        <View>
-          <View
-            style={[
-              AppStyles.boxRounded,
-              AppStyles.boxBackground,
-              styles.searchBarContainer
-            ]}
-          >
-            <View style={styles.mainSearchBox}>
-              <TextInput
-                placeholder={"Spell name..."}
-                placeholderTextColor={AppStyles.inputPlaceholder.color}
-                style={[AppStyles.headerSubtext, styles.searchInput]}
-                onChangeText={text => text != spellName && setSpellName(text)}
-                value={spellName}
-              ></TextInput>
-              <TouchableOpacity
-                onPress={() => setFilterBoxVisibility(!filterBoxVisible)}
-                style={styles.searchFiltersButton}
-              >
-                {!loading ? (
-                  <Icon
-                    style={[
-                      AppStyles.inputPlaceholder,
-                      styles.searchFiltersButtonLines
-                    ]}
-                    name={"filter-list"}
-                    size={25}
-                  />
-                ) : (
-                  <Spinner
-                    style={[
-                      AppStyles.inputPlaceholder,
-                      styles.searchFiltersButtonLines
-                    ]}
-                    type={"Circle"}
-                    size={25}
-                  />
-                )}
-              </TouchableOpacity>
-            </View>
-            {filterBoxVisible && (
-              <View style={styles.subSearchBox}>
-                <View style={styles.subSearchBoxItemContainer}>
-                  <Text
-                    style={[
-                      AppStyles.headerSubtext,
-                      styles.subSearchBoxItemText
-                    ]}
-                  >
-                    Class
-                  </Text>
-                  <Picker
-                    mode="dropdown"
-                    style={[
-                      AppStyles.smallHeaderText,
-                      styles.subSearchBoxItemPicker
-                    ]}
-                    itemStyle={[styles.subSearchBoxItemPickerItem]}
-                    selectedValue={selectedSpellClass}
-                    onValueChange={value => setSelectedSpellClass(value)}
-                  >
-                    {spellClasses.length == 0 ? (
-                      <Picker.Item label={"No classes available"} value="" />
-                    ) : (
-                      [
-                        <Picker.Item key={"any"} label={"Any"} value="" />,
-                        ...spellClasses.map(spellClass => (
-                          <Picker.Item
-                            key={spellClass}
-                            label={spellClass}
-                            value={spellClass}
-                          />
-                        ))
-                      ]
-                    )}
-                  </Picker>
-                </View>
-                <View style={styles.subSearchBoxItemContainer}>
-                  <Text
-                    style={[
-                      AppStyles.headerSubtext,
-                      styles.subSearchBoxItemText
-                    ]}
-                  >
-                    School
-                  </Text>
-                  <Picker
-                    mode="dropdown"
-                    style={[
-                      AppStyles.smallHeaderText,
-                      styles.subSearchBoxItemPicker
-                    ]}
-                    itemStyle={[styles.subSearchBoxItemPickerItem]}
-                    selectedValue={selectedSpellSchool}
-                    onValueChange={value => setSelectedSpellSchool(value)}
-                  >
-                    {spellSchools.length == 0 ? (
-                      <Picker.Item label={"No classes available"} value="" />
-                    ) : (
-                      [
-                        <Picker.Item key={"any"} label={"Any"} value="" />,
-                        ...spellSchools.map(spellSchool => (
-                          <Picker.Item
-                            key={spellSchool}
-                            label={spellSchool}
-                            value={spellSchool}
-                          />
-                        ))
-                      ]
-                    )}
-                  </Picker>
-                </View>
-                <View style={styles.subSearchBoxItemContainer}>
-                  <Text
-                    style={[
-                      AppStyles.headerSubtext,
-                      styles.subSearchBoxItemText
-                    ]}
-                  >
-                    Level
-                  </Text>
-                  <Picker
-                    mode="dropdown"
-                    style={[
-                      AppStyles.smallHeaderText,
-                      styles.subSearchBoxItemPicker
-                    ]}
-                    itemStyle={[styles.subSearchBoxItemPickerItem]}
-                    selectedValue={selectedSpellLevel}
-                    onValueChange={value => setSelectedSpellLevel(value)}
-                  >
-                    {spellLevels.length == 0 ? (
-                      <Picker.Item label={"No levels available"} value="" />
-                    ) : (
-                      [
-                        <Picker.Item key={"any"} label={"Any"} value="" />,
-                        ...spellLevels.map(spellLevel => (
-                          <Picker.Item
-                            key={spellLevel}
-                            label={spellLevel}
-                            value={spellLevel}
-                          />
-                        ))
-                      ]
-                    )}
-                  </Picker>
-                </View>
-                <View style={styles.subSearchBoxItemContainer}>
-                  <Text
-                    style={[
-                      AppStyles.headerSubtext,
-                      styles.subSearchBoxItemText
-                    ]}
-                  >
-                    Order by
-                  </Text>
-                  <Picker
-                    mode="dropdown"
-                    style={[
-                      AppStyles.smallHeaderText,
-                      styles.subSearchBoxItemPicker
-                    ]}
-                  >
-                    <Picker.Item label={"Alphabetical"} value={"alpha"} />
-                    <Picker.Item label={"School"} value={"school"} />
-                    <Picker.Item label={"Level"} value={"level"} />
-                    <Picker.Item label={"Class"} value={"class"} />
-                  </Picker>
-                </View>
-              </View>
-            )}
-          </View>
-        </View>
+  const makeSpellFilter = (
+    name: string,
+    currentValue: string,
+    possibleValues: string[],
+    onValueChanged: Function
+  ) => (
+    <View style={styles.filterPickerContainer}>
+      <View style={styles.filterPickerNameContainer}>
+        <Text style={StyleProvider.styles.listItemTextStrong}>{name}</Text>
       </View>
-      <View style={[AppStyles.edgePadding, styles.container]}>
-        <ScrollView
-          style={AppStyles.appBackground}
-          contentContainerStyle={styles.scrollViewContainer}
+      <View style={styles.filterPickerPickerContainer}>
+        <MdIcon
+          name="arrow-drop-down"
+          size={19}
+          style={[
+            StyleProvider.styles.listItemIconStrong,
+            { position: "absolute", right: 14, top: 5 }
+          ]}
+          pointerEvents="none"
+        />
+        <Picker
+          style={[
+            styles.filterPickerPicker,
+            StyleProvider.styles.listItemTextWeak // Only color from here is applied
+          ]}
+          mode="dropdown"
+          selectedValue={currentValue}
+          onValueChange={value => onValueChanged(value)}
+          itemStyle={StyleProvider.styles.listItemTextWeak}
         >
-          {filteredSpellIDs.map(spellID => (
-            <SpellItemCompact
-              key={spellID.id}
-              spellID={spellID}
-              style={styles.spellListItem}
-              onPress={() => {
-                props.onSpellPressed && props.onSpellPressed(spellID);
-              }}
-            />
-          ))}
-        </ScrollView>
+          {possibleValues.length === 0 ? (
+            <Picker.Item label={"Not available"} value="" />
+          ) : (
+            [
+              <Picker.Item key={"any"} label={"Any"} value="" />,
+              ...possibleValues.map(value => (
+                <Picker.Item key={value} label={value} value={value} />
+              ))
+            ]
+          )}
+        </Picker>
       </View>
+    </View>
+  );
+
+  const makeFiltersContainer = () => (
+    <View style={[styles.filtersContainer]}>
+      <View style={[styles.visibleFiltersContainer]}>
+        <TextInput
+          style={[
+            StyleProvider.styles.textInputPlaceholderText,
+            styles.filtersTextInput
+          ]}
+          placeholder="Enter a spell name..."
+          placeholderTextColor={
+            StyleProvider.styles.textInputPlaceholderText.color
+          }
+        />
+        <TouchableOpacity
+          onPress={() => setFilterBoxVisibility(!filterBoxVisible)}
+          containerStyle={[styles.filterOpenButton]}
+        >
+          <MdIcon
+            name="filter-list"
+            size={30}
+            style={[
+              StyleProvider.styles.listItemIconStrong,
+              filterBoxVisible && styles.filterOpenButtonIconToggled
+            ]}
+          />
+        </TouchableOpacity>
+      </View>
+      {filterBoxVisible && (
+        <View style={[styles.hiddenFiltersContainer]}>
+          {makeSpellFilter(
+            "Class",
+            selectedSpellClass,
+            spellClasses,
+            setSelectedSpellClass
+          )}
+          {makeSpellFilter(
+            "Level",
+            selectedSpellLevel,
+            spellLevels,
+            setSelectedSpellLevel
+          )}
+          {makeSpellFilter(
+            "School",
+            selectedSpellSchool,
+            spellSchools,
+            setSelectedSpellSchool
+          )}
+        </View>
+      )}
+    </View>
+  );
+
+  return (
+    <View style={[styles.container, StyleProvider.styles.mainBackground]}>
+      <View style={[styles.pageTitleContainer]}>
+        <Text style={StyleProvider.styles.pageTitleText}>Spell Search</Text>
+      </View>
+      {makeFiltersContainer()}
     </View>
   );
 };
@@ -307,59 +204,62 @@ export default SpellsKnownScreen;
 
 const styles = StyleSheet.create({
   container: {
-    flex: 1,
-    zIndex: -1
+    flex: 1
   },
-  headerHeightOverride: {
-    zIndex: 1
-  },
-  boxBorder: {
-    borderColor: AppStyles.boxBackground.backgroundColor,
-    borderWidth: 2
-  },
-  searchBarContainer: {
-    flexDirection: "column",
-    marginTop: 20,
-    zIndex: 101
-  },
-  mainSearchBox: {
-    flexDirection: "row"
-  },
-  subSearchBox: {
-    flexDirection: "column",
-    paddingHorizontal: 20,
-    paddingBottom: 10
-  },
-  searchInput: {
-    padding: 13,
-    flex: 1,
-    paddingLeft: 20,
-    fontSize: 20
-  },
-  searchFiltersButton: {
-    flex: 0,
-    alignItems: "center",
+  pageTitleContainer: {
+    height: 93,
+    borderBottomColor: StyleProvider.styles.listItemDivider.borderColor,
+    borderBottomWidth: StyleProvider.styles.listItemDivider.borderWidth,
+    borderStyle: StyleProvider.styles.listItemDivider.borderStyle,
     justifyContent: "center",
-    paddingRight: 20
+    alignItems: "center"
   },
-  searchFiltersButtonLines: { fontSize: 25 },
-  subSearchBoxItemContainer: {
+  filtersContainer: {
+    borderBottomColor: StyleProvider.styles.listItemDivider.borderColor,
+    borderBottomWidth: StyleProvider.styles.listItemDivider.borderWidth,
+    borderStyle: StyleProvider.styles.listItemDivider.borderStyle,
+    paddingVertical: StyleProvider.styles.edgePadding.padding - 10
+  },
+  visibleFiltersContainer: {
+    paddingLeft: StyleProvider.styles.edgePadding.padding,
     flexDirection: "row"
   },
-  subSearchBoxItemText: {
-    flexBasis: 100,
-    textAlignVertical: "center",
-    fontSize: 17
+  hiddenFiltersContainer: {
+    marginTop: StyleProvider.styles.edgePadding.padding - 10,
+    marginHorizontal: StyleProvider.styles.edgePadding.padding,
+    paddingVertical: StyleProvider.styles.edgePadding.padding,
+    borderTopColor: StyleProvider.styles.listItemDivider.borderColor,
+    borderTopWidth: StyleProvider.styles.listItemDivider.borderWidth,
+    borderStyle: StyleProvider.styles.listItemDivider.borderStyle
   },
-  subSearchBoxItemPicker: { flex: 1, height: 35 },
-  subSearchBoxItemPickerItem: {
-    fontSize: 17,
-    textTransform: "capitalize"
+  hiddenFiltersContainerVisible: {},
+  filtersTextInput: { flex: 1 },
+  filterOpenButton: {
+    flexBasis: 60,
+    justifyContent: "center",
+    alignItems: "center"
   },
-  spellListItem: {
-    marginBottom: 20
+  filterOpenButtonIconToggled: {
+    transform: [
+      {
+        rotateZ: "180deg"
+      }
+    ]
   },
-  scrollViewContainer: {
-    paddingTop: AppStyles.edgePadding.paddingHorizontal
-  }
+  filterPickerContainer: {
+    flexDirection: "row"
+  },
+  filterPickerNameContainer: {
+    flex: 0.5,
+    justifyContent: "center",
+    paddingTop: 2
+  },
+  filterPickerPickerContainer: {
+    flex: 0.5
+  },
+  filterPickerPicker: {
+    height: 30,
+    backgroundColor: "transparent"
+  },
+  filterPickerItem: {}
 });
