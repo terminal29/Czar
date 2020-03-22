@@ -7,6 +7,8 @@ import SpellProvider from "../data/SpellProvider";
 import DescriptionFormatter from "../data/DescriptionFormatter";
 import { Spell } from "../structs/Spell";
 import Spinner from "react-native-spinkit";
+import { StyleProvider } from "../data/StyleProvider";
+import MdIcon from "react-native-vector-icons/MaterialIcons";
 
 interface SpellItemCompactProps {
   style?: any;
@@ -62,7 +64,7 @@ const SpellItemCompact = (props: SpellItemCompactProps) => {
   }, [spellInfo]);
 
   const getVSMString = () =>
-    `${spellInfo.hasMaterialComponent ? "V" : ""}${
+    `${spellInfo.hasVerbalComponent ? "V" : ""}${
       spellInfo.hasSomaticComponent ? "S" : ""
     }${spellInfo.hasMaterialComponent ? "M" : ""}`;
 
@@ -70,36 +72,29 @@ const SpellItemCompact = (props: SpellItemCompactProps) => {
     `${spellInfo.isConcentration ? "C" : ""}${spellInfo.isRitual ? "R" : ""}`;
 
   return (
-    <View style={[styles.container, AppStyles.boxBackground, props.style]}>
-      {loading ? (
-        <View style={styles.center}>
-          <Spinner type={"Wave"} color={AppStyles.smallHeaderText.color} />
-        </View>
-      ) : spellInfo ? (
-        <TouchableOpacity
-          style={styles.mainContainer}
-          onPress={() => props.onPress && props.onPress()}
-        >
-          <View style={styles.leftContainer} />
-          <View style={styles.rightContainer}>
-            <View style={styles.spellNameContainer}>
-              <Text
-                style={[
-                  styles.spellName,
-                  AppStyles.appFont,
-                  AppStyles.headingTextColor
-                ]}
-              >
-                {spellInfo.name}
-              </Text>
-            </View>
-            <View style={styles.spellInfoContainer}>
+    <TouchableOpacity
+      style={[styles.container, props.style]}
+      disabled={!spellInfo}
+      onPress={() => props.onPress?.()}
+    >
+      <View style={styles.innerContainer}>
+        <View style={styles.infoContainer}>
+          <Text
+            style={[
+              StyleProvider.styles.listItemTextStrong,
+              styles.spellTitleText
+            ]}
+          >
+            {spellInfo ? spellInfo.name : props.spellID.id}
+          </Text>
+          {spellInfo ? (
+            <View style={styles.shortInfoContainer}>
               <Text
                 numberOfLines={1}
                 style={[
-                  styles.spellInfoString,
-                  AppStyles.appFont,
-                  AppStyles.subheadingTextColor
+                  StyleProvider.styles.listItemTextWeak,
+                  styles.shortInfo,
+                  styles.shortInfoFirst
                 ]}
               >
                 {spellInfo.level === "0"
@@ -109,9 +104,8 @@ const SpellItemCompact = (props: SpellItemCompactProps) => {
               <Text
                 numberOfLines={1}
                 style={[
-                  styles.spellInfoString,
-                  AppStyles.appFont,
-                  AppStyles.subheadingTextColor
+                  StyleProvider.styles.listItemTextWeak,
+                  styles.shortInfo
                 ]}
               >
                 {spellInfo.time}
@@ -119,46 +113,54 @@ const SpellItemCompact = (props: SpellItemCompactProps) => {
               <Text
                 numberOfLines={1}
                 style={[
-                  styles.spellInfoString,
-                  AppStyles.appFont,
-                  AppStyles.subheadingTextColor,
-                  { flexShrink: 1 }
+                  StyleProvider.styles.listItemTextWeak,
+                  styles.shortInfo
                 ]}
               >
                 {spellInfo.range}
               </Text>
-              {getVSMString().length > 0 && (
-                <Text
-                  numberOfLines={1}
-                  style={[
-                    styles.spellInfoString,
-                    AppStyles.appFont,
-                    AppStyles.subheadingTextColor
-                  ]}
-                >
-                  {getVSMString()}
-                </Text>
-              )}
-
-              {getCRString().length > 0 && (
-                <Text
-                  numberOfLines={1}
-                  style={[
-                    styles.spellInfoString,
-                    AppStyles.appFont,
-                    AppStyles.subheadingTextColor
-                  ]}
-                >
-                  {getCRString()}
-                </Text>
-              )}
+              <Text
+                numberOfLines={1}
+                style={[
+                  StyleProvider.styles.listItemTextWeak,
+                  styles.shortInfo
+                ]}
+              >
+                {getVSMString()}
+              </Text>
+              <Text
+                numberOfLines={1}
+                style={[
+                  StyleProvider.styles.listItemTextWeak,
+                  styles.shortInfo
+                ]}
+              >
+                {getCRString()}
+              </Text>
             </View>
-          </View>
-        </TouchableOpacity>
-      ) : (
-        <View style={styles.infoContainer}></View>
-      )}
-    </View>
+          ) : (
+            <View style={styles.shortInfoContainer}>
+              <Text
+                style={[
+                  StyleProvider.styles.listItemTextWeak,
+                  styles.shortInfo,
+                  styles.shortInfoFirst
+                ]}
+              >
+                Loading data...
+              </Text>
+            </View>
+          )}
+        </View>
+        <View style={styles.chevronContainer}>
+          <MdIcon
+            size={20}
+            name={"chevron-right"}
+            style={[StyleProvider.styles.listItemIconWeak]}
+          />
+        </View>
+      </View>
+    </TouchableOpacity>
   );
 };
 
@@ -166,51 +168,27 @@ export default SpellItemCompact;
 
 const styles = StyleSheet.create({
   container: {
-    height: 60
+    height: 65,
+    justifyContent: "center"
   },
-  subHeaderContainer: {
-    marginTop: 5,
+  innerContainer: {
     flexDirection: "row"
   },
+  spellTitleText: {},
   infoContainer: {
-    marginTop: 5
-  },
-  spellInfoTextMargin: {
-    marginTop: 10
-  },
-  center: {
-    alignItems: "center",
-    justifyContent: "center",
-    margin: 20
-  },
-  leftContainer: {
-    flexBasis: 35
-  },
-  rightContainer: {
     flex: 1,
     flexDirection: "column"
   },
-  spellSmallInfoMargin: {},
-  mainContainer: {
-    flex: 1,
-    flexDirection: "row",
+  shortInfoContainer: {
+    flexDirection: "row"
+  },
+  shortInfo: {
+    flex: 1
+  },
+  shortInfoFirst: {},
+  chevronContainer: {
+    flex: 0,
+    justifyContent: "center",
     alignItems: "center"
-  },
-  smallDescriptionContainer: {
-    marginTop: 10
-  },
-  spellNameContainer: { flex: 0, marginTop: 6, height: 34 },
-  spellName: {
-    fontSize: 30
-  },
-  spellInfoContainer: {
-    flex: 1,
-    flexDirection: "row",
-    justifyContent: "flex-start",
-    flexWrap: "nowrap"
-  },
-  spellInfoString: {
-    fontSize: 13,
-    marginRight: 12
   }
 });

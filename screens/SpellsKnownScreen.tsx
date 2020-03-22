@@ -1,12 +1,21 @@
 import * as React from "react";
-import { Text, View, StyleSheet, TextInput, Picker } from "react-native";
+import {
+  Text,
+  View,
+  StyleSheet,
+  TextInput,
+  Picker,
+  ScrollView,
+  FlatList
+} from "react-native";
 import MdIcon from "react-native-vector-icons/MaterialIcons";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import SpellProvider from "../data/SpellProvider";
 import { SpellID } from "../structs/SpellID";
 import nextFrame from "next-frame";
 import { StyleProvider } from "../data/StyleProvider";
 import { TouchableOpacity } from "react-native-gesture-handler";
+import SpellItemCompact from "../components/SpellItemCompact";
 
 interface SpellsKnownScreenProps {
   onSpellPressed?: Function;
@@ -50,14 +59,13 @@ const SpellsKnownScreen = (props: SpellsKnownScreenProps) => {
           await nextFrame();
         }
         if (additionalShownSpells.length == 20) {
-          setFilteredSpellIDs([...filteredSpellIDs, ...additionalShownSpells]);
-          additionalShownSpells = [];
+          setFilteredSpellIDs(additionalShownSpells);
         }
         nextSpell = await iterator.next();
       }
       if (!cancelled) {
         setLoading(false);
-        setFilteredSpellIDs([...filteredSpellIDs, ...additionalShownSpells]);
+        setFilteredSpellIDs(additionalShownSpells);
       }
     };
 
@@ -97,9 +105,10 @@ const SpellsKnownScreen = (props: SpellsKnownScreenProps) => {
     name: string,
     currentValue: string,
     possibleValues: string[],
-    onValueChanged: Function
+    onValueChanged: Function,
+    containerStyles?: any[]
   ) => (
-    <View style={styles.filterPickerContainer}>
+    <View style={[styles.filterPickerContainer, ...[containerStyles]]}>
       <View style={styles.filterPickerNameContainer}>
         <Text style={StyleProvider.styles.listItemTextStrong}>{name}</Text>
       </View>
@@ -116,7 +125,7 @@ const SpellsKnownScreen = (props: SpellsKnownScreenProps) => {
         <Picker
           style={[
             styles.filterPickerPicker,
-            StyleProvider.styles.listItemTextWeak // Only color from here is applied
+            { color: StyleProvider.styles.listItemTextWeak.color } // Not an error, works as intended
           ]}
           mode="dropdown"
           selectedValue={currentValue}
@@ -143,13 +152,15 @@ const SpellsKnownScreen = (props: SpellsKnownScreenProps) => {
       <View style={[styles.visibleFiltersContainer]}>
         <TextInput
           style={[
-            StyleProvider.styles.textInputPlaceholderText,
+            StyleProvider.styles.listItemTextStrong,
             styles.filtersTextInput
           ]}
           placeholder="Enter a spell name..."
           placeholderTextColor={
             StyleProvider.styles.textInputPlaceholderText.color
           }
+          value={spellName}
+          onChangeText={value => setSpellName(value)}
         />
         <TouchableOpacity
           onPress={() => setFilterBoxVisibility(!filterBoxVisible)}
@@ -171,13 +182,15 @@ const SpellsKnownScreen = (props: SpellsKnownScreenProps) => {
             "Class",
             selectedSpellClass,
             spellClasses,
-            setSelectedSpellClass
+            setSelectedSpellClass,
+            [styles.filterPickerBottomMargin]
           )}
           {makeSpellFilter(
             "Level",
             selectedSpellLevel,
             spellLevels,
-            setSelectedSpellLevel
+            setSelectedSpellLevel,
+            [styles.filterPickerBottomMargin]
           )}
           {makeSpellFilter(
             "School",
@@ -189,6 +202,19 @@ const SpellsKnownScreen = (props: SpellsKnownScreenProps) => {
       )}
     </View>
   );
+  const renderSpellItem = useCallback(
+    ({ item, index }) => (
+      <SpellItemCompact
+        key={item.id}
+        spellID={item}
+        onPress={() => props.onSpellPressed?.(item)}
+        style={[
+          index !== filteredSpellIDs.length - 1 && styles.listItemBorderBottom
+        ]}
+      />
+    ),
+    [filteredSpellIDs]
+  );
 
   return (
     <View style={[styles.container, StyleProvider.styles.mainBackground]}>
@@ -196,6 +222,13 @@ const SpellsKnownScreen = (props: SpellsKnownScreenProps) => {
         <Text style={StyleProvider.styles.pageTitleText}>Spell Search</Text>
       </View>
       {makeFiltersContainer()}
+      <FlatList
+        data={filteredSpellIDs}
+        renderItem={renderSpellItem}
+        removeClippedSubviews={true} // Unmount components when outside of window
+        initialNumToRender={2} // Reduce initial render amount
+        contentContainerStyle={styles.listContainer}
+      />
     </View>
   );
 };
@@ -261,5 +294,16 @@ const styles = StyleSheet.create({
     height: 30,
     backgroundColor: "transparent"
   },
-  filterPickerItem: {}
+  filterPickerItem: {},
+  filterPickerBottomMargin: {
+    marginBottom: StyleProvider.styles.edgePadding.padding - 10
+  },
+  listItemBorderBottom: {
+    borderBottomColor: StyleProvider.styles.listItemDivider.borderColor,
+    borderBottomWidth: StyleProvider.styles.listItemDivider.borderWidth,
+    borderStyle: StyleProvider.styles.listItemDivider.borderStyle
+  },
+  listContainer: {
+    paddingHorizontal: StyleProvider.styles.edgePadding.padding
+  }
 });
