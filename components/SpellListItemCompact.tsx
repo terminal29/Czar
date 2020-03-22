@@ -1,35 +1,53 @@
 import * as React from "react";
-import { Text, View, StyleSheet, Dimensions, Image } from "react-native";
+import {
+  Text,
+  View,
+  StyleSheet,
+  Dimensions,
+  Image,
+  TouchableOpacity
+} from "react-native";
 import { SpellList } from "../structs/SpellList";
-import { AppStyles } from "../styles/AppStyles";
-import { TouchableOpacity } from "react-native-gesture-handler";
+import { StyleProvider } from "../data/StyleProvider";
+import MdIcon from "react-native-vector-icons/MaterialIcons";
 
 interface SpellListItemCompactProps {
+  style?: any;
   list: SpellList;
   onPress?: Function;
-  onLongPress?: Function;
+  onEditPress?: Function;
 }
 
 const SpellListItemCompact = (props: SpellListItemCompactProps) => {
   return (
-    <View style={styles.container}>
-      <TouchableOpacity
-        onPress={() => props.onPress && props.onPress()}
-        onLongPress={() => props.onLongPress && props.onLongPress()}
-      >
-        <Image
-          style={styles.cardImage}
-          source={{ uri: props.list.thumbnailURI }}
-        />
+    <TouchableOpacity
+      style={[styles.container, props.style]}
+      onPress={() => props.onPress?.(props.list)}
+    >
+      <Image
+        style={styles.cardImage}
+        source={{ uri: props.list.thumbnailURI }}
+      />
+      <View style={styles.cardInfoContainer}>
         <Text
           numberOfLines={1}
           ellipsizeMode="tail"
-          style={[AppStyles.smallHeaderSubtext, styles.cardTitle]}
+          style={[StyleProvider.styles.listItemTextStrong, styles.cardTitle]}
         >
           {props.list.name}
         </Text>
-      </TouchableOpacity>
-    </View>
+        <TouchableOpacity
+          style={[styles.editCardIconContainer]}
+          onPress={() => props.onEditPress?.(props.list)}
+        >
+          <MdIcon
+            name="more-horiz"
+            size={25}
+            style={[StyleProvider.styles.listItemTextWeak, styles.editButton]}
+          />
+        </TouchableOpacity>
+      </View>
+    </TouchableOpacity>
   );
 };
 
@@ -37,19 +55,28 @@ export { SpellListItemCompact };
 
 const styles = StyleSheet.create({
   container: {
-    flexBasis: "50%",
-    padding: 10
+    flex: 1
   },
   cardImage: {
-    backgroundColor: "#fff",
-    borderRadius: 10,
     width: "100%",
     height: 150,
-    marginBottom: 4
+    resizeMode: "stretch"
   },
   cardTitle: {
-    fontSize: 18,
-    marginBottom: 30,
-    marginLeft: 0
+    flex: 1,
+    padding: StyleProvider.styles.edgePadding.padding
+  },
+  cardInfoContainer: {
+    flexDirection: "row"
+  },
+  editCardIconContainer: {
+    padding: StyleProvider.styles.edgePadding.padding,
+    justifyContent: "center",
+    alignItems: "center",
+    flex: 0
+  },
+  editButton: {
+    marginVertical: -15,
+    fontSize: 20
   }
 });

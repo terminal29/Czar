@@ -91,7 +91,7 @@ export default function App() {
         onListPressed={list => {
           navigation.push("SpellListScreen", { list });
         }}
-        onListLongPressed={list => {
+        onListEditPressed={list => {
           navigation.push("ModifySpellListScreen", { list });
         }}
       />
@@ -144,10 +144,10 @@ export default function App() {
           showLabel: false,
           style: { ...styles.tabBar }
         }}
-        initialRouteName={"Search"}
+        initialRouteName={"SpellLists"}
       >
         <Tab.Screen name="Sources">{SourcesScreen}</Tab.Screen>
-        <Tab.Screen name="Spells">{ListsScreen}</Tab.Screen>
+        <Tab.Screen name="SpellLists">{ListsScreen}</Tab.Screen>
         <Tab.Screen name="Search">{KnownScreen}</Tab.Screen>
       </Tab.Navigator>
     ),
