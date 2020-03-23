@@ -16,13 +16,15 @@ import PullableScrollView from "../components/PullableScrollView";
 import Animated from "react-native-reanimated";
 import { useMemoOne } from "use-memo-one";
 
-interface SpellListScreenProps {
+interface SpellListEditScreenProps {
   list: SpellList;
-  onSpellPressed: Function;
-  onEditMode?: Function;
+  onSpellRemoved: Function;
+  onAddDivider: Function;
+  onConfirmed: Function;
+  onSpellReordered: Function;
 }
 
-const SpellListScreen = (props: SpellListScreenProps) => {
+const SpellListEditScreen = (props: SpellListEditScreenProps) => {
   const [spellIDs, setSpellIDs] = useState([]);
   const [loading, setLoading] = useState(true);
   const scrollTranslateY = useMemoOne(() => new Animated.Value(0), []);
@@ -44,7 +46,7 @@ const SpellListScreen = (props: SpellListScreenProps) => {
   }, []);
 
   const onPullDown = () => {
-    props.onEditMode?.(props.list);
+    props.onConfirmed?.(props.list);
   };
 
   return (
@@ -57,14 +59,14 @@ const SpellListScreen = (props: SpellListScreenProps) => {
         >
           <View style={styles.darkTitleBackgroundOverlay} />
           <Text style={StyleProvider.styles.pageTitleText}>
-            {props.list.name}
+            Edit Spell Selection
           </Text>
         </ImageBackground>
       ) : (
         <View style={[styles.pageTitleContainer]}>
           <View style={styles.darkTitleBackgroundOverlay} />
           <Text style={StyleProvider.styles.pageTitleText}>
-            {props.list.name}
+            Edit Spell Selection
           </Text>
         </View>
       )}
@@ -72,13 +74,13 @@ const SpellListScreen = (props: SpellListScreenProps) => {
         contentContainerStyle={{ flex: 0 }}
         threshold={50}
         {...{ scrollTranslateY }}
-        onPull={() => onPullDown()}
+        onPull={onPullDown}
         willPull={() => {}}
       >
         {/* Content Scrollview */}
         <View style={styles.ptrContainer}>
           <Text style={[StyleProvider.styles.listItemTextWeak]}>
-            Pull to Edit
+            Pull to Confirm
           </Text>
           <MdIcon
             name="keyboard-arrow-down"
@@ -91,7 +93,7 @@ const SpellListScreen = (props: SpellListScreenProps) => {
   );
 };
 
-export default SpellListScreen;
+export default SpellListEditScreen;
 
 const styles = StyleSheet.create({
   container: {

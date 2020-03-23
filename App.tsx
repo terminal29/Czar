@@ -19,6 +19,7 @@ import SpellListAddScreen from "./screens/SpellListAddScreen";
 import { SpellID } from "./structs/SpellID";
 import SpellListProvider from "./data/SpellListProvider";
 import AddToSpellListScreen from "./screens/AddToSpellListScreen";
+import SpellListEditScreen from "./screens/SpellListEditScreen";
 
 const Tab = createBottomTabNavigator();
 const Stack = createStackNavigator();
@@ -236,10 +237,10 @@ export default function App() {
     ({ route, navigation }) => (
       <SpellListAddScreen
         existingList={route.params.list}
-        onDone={newList => {
+        onDone={async newList => {
           // submit new list to lists
-          SpellListProvider.removeSpellList(route.params.list);
-          SpellListProvider.addSpellList(newList);
+          await SpellListProvider.removeSpellList(route.params.list);
+          await SpellListProvider.addSpellList(newList);
           navigation.goBack();
         }}
         onDelete={() => {
@@ -264,10 +265,35 @@ export default function App() {
             spellList: route.params.list
           });
         }}
-        onNavigateToSpellSearchPressed={() => navigation.navigate("Search")}
+        onEditMode={() =>
+          navigation.push("EditSpellSelectionScreen", {
+            list: route.params.list
+          })
+        }
       />
     ),
     []
+  );
+
+  const EditSpellSelectionScreen = useCallback(
+    ({ route, navigation }) => {
+      return (
+        <SpellListEditScreen
+          list={route.params.list}
+          onAddDivider={() => Toast.show("Not implemented yet :)")}
+          onConfirmed={async newList => {
+            await SpellListProvider.removeSpellList(route.params.list);
+            await SpellListProvider.addSpellList(newList);
+            navigation.goBack();
+          }}
+          onSpellRemoved={spellID =>
+            SpellListProvider.removeSpellIDFromList(route.params.list, spellID)
+          }
+          onSpellReordered={() => Toast.show("Not implemented yet :)")}
+        />
+      );
+    },
+    [spellLists]
   );
 
   const AddSpellToSpellListScreen = useCallback(
@@ -303,6 +329,9 @@ export default function App() {
         </Stack.Screen>
         <Stack.Screen name="ModifySpellListScreen">
           {ModifySpellListScreen}
+        </Stack.Screen>
+        <Stack.Screen name="EditSpellSelectionScreen">
+          {EditSpellSelectionScreen}
         </Stack.Screen>
         <Stack.Screen name="SpellListSpellPopupScreen">
           {SpellListSpellPopupScreen}
