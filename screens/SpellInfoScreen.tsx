@@ -7,6 +7,7 @@ import { Spell } from "../structs/Spell";
 import SpellItemCompact from "../components/SpellItemCompact";
 import DescriptionFormatter from "../data/DescriptionFormatter";
 import { AppStyles } from "../styles/AppStyles";
+import { StyleProvider } from "../data/StyleProvider";
 
 interface SpellInfoScreenProps {
   spellID: SpellID;
@@ -60,167 +61,89 @@ const SpellInfoScreen = (props: SpellInfoScreenProps) => {
     };
   }, [spellInfo]);
 
-  return (
-    <ScrollView
-      style={[AppStyles.appBackground, styles.container]}
-      contentContainerStyle={{
-        padding: AppStyles.edgePadding.paddingHorizontal
-      }}
-    >
-      {loading ? (
-        <View>
-          <Text>Loading...</Text>
-        </View>
-      ) : spellInfo ? (
-        <>
-          <View
-            style={[
-              AppStyles.boxRounded,
-              AppStyles.boxBackground,
-              styles.innerBox
-            ]}
-          >
-            <Text style={[AppStyles.headerText, styles.headerMargin]}>
-              {spellInfo.name}
-            </Text>
-            <View style={styles.infoBox}>
-              <Text style={[AppStyles.smallHeaderSubtext, styles.leftInfoItem]}>
-                Level
-              </Text>
-              <Text
-                style={[AppStyles.smallHeaderSubtext, styles.rightInfoItem]}
-              >
-                {spellInfo.level === "0" ? "Cantrip" : spellInfo.level}
-              </Text>
-            </View>
-            <View style={styles.infoBox}>
-              <Text style={[AppStyles.smallHeaderSubtext, styles.leftInfoItem]}>
-                School
-              </Text>
-              <Text
-                style={[AppStyles.smallHeaderSubtext, styles.rightInfoItem]}
-              >
-                {spellInfo.school}
-              </Text>
-            </View>
-            <View style={styles.infoBox}>
-              <Text style={[AppStyles.smallHeaderSubtext, styles.leftInfoItem]}>
-                Classes
-              </Text>
-              <Text
-                style={[AppStyles.smallHeaderSubtext, styles.rightInfoItem]}
-              >
-                {spellInfo.classes.join(", ")}
-              </Text>
-            </View>
-            <View style={styles.infoBox}>
-              <Text style={[AppStyles.smallHeaderSubtext, styles.leftInfoItem]}>
-                Casting Time
-              </Text>
-              <Text
-                style={[AppStyles.smallHeaderSubtext, styles.rightInfoItem]}
-              >
-                {spellInfo.time}
-              </Text>
-            </View>
-            <View style={styles.infoBox}>
-              <Text style={[AppStyles.smallHeaderSubtext, styles.leftInfoItem]}>
-                Range
-              </Text>
-              <Text
-                style={[AppStyles.smallHeaderSubtext, styles.rightInfoItem]}
-              >
-                {spellInfo.range}
-              </Text>
-            </View>
-            <View style={styles.infoBox}>
-              <Text style={[AppStyles.smallHeaderSubtext, styles.leftInfoItem]}>
-                Components
-              </Text>
-              <Text
-                style={[AppStyles.smallHeaderSubtext, styles.rightInfoItem]}
-              >
-                {spellInfo.hasMaterialComponent ? "V" : ""}
-                {spellInfo.hasSomaticComponent ? "S" : ""}
-                {spellInfo.hasMaterialComponent ? "M" : ""}
-              </Text>
-            </View>
-            {spellInfo.hasMaterialComponent && (
-              <View style={styles.infoBox}>
-                <Text
-                  style={[AppStyles.smallHeaderSubtext, styles.leftInfoItem]}
-                >
-                  Materials
-                </Text>
-                <Text
-                  style={[AppStyles.smallHeaderSubtext, styles.rightInfoItem]}
-                >
-                  {spellInfo.materialComponents}
-                </Text>
-              </View>
-            )}
-            <View style={styles.infoBox}>
-              <Text style={[AppStyles.smallHeaderSubtext, styles.leftInfoItem]}>
-                Duration
-              </Text>
-              <Text
-                style={[AppStyles.smallHeaderSubtext, styles.rightInfoItem]}
-              >
-                {spellInfo.duration}
-              </Text>
-            </View>
-            <View style={styles.infoBox}>
-              <Text style={[AppStyles.smallHeaderSubtext, styles.leftInfoItem]}>
-                Ritual
-              </Text>
-              <Text
-                style={[AppStyles.smallHeaderSubtext, styles.rightInfoItem]}
-              >
-                {spellInfo.isRitual ? "Yes" : "No"}
-              </Text>
-            </View>
-            <View style={styles.infoBox}>
-              <Text style={[AppStyles.smallHeaderSubtext, styles.leftInfoItem]}>
-                Concentration
-              </Text>
-              <Text
-                style={[AppStyles.smallHeaderSubtext, styles.rightInfoItem]}
-              >
-                {spellInfo.isConcentration ? "Yes" : "No"}
-              </Text>
-            </View>
-            <View style={styles.infoContainer}>
-              <View>
-                {(() => {
-                  if (descriptionXML) {
-                    const comps = DescriptionFormatter.DescriptionXML2ReactElements(
-                      descriptionXML,
-                      { extraStyles: [styles.textTopMargin] }
-                    );
-                    return comps;
-                  }
-                })()}
-              </View>
+  const up = (text: string) => text.replace(/^\w/, c => c.toLocaleUpperCase());
 
-              <Text
-                style={[
-                  AppStyles.smallHeaderSubtext,
-                  styles.rightText,
-                  styles.textTopMargin
-                ]}
-              >
-                {spellInfo.source}
-              </Text>
+  const num2pos = num =>
+    num == "1" ? "1st" : "2" ? "2nd" : "3" ? "3rd" : `${num}th`;
+
+  const getSpellLevelAndType = () =>
+    spellInfo.level === "0"
+      ? `${up(spellInfo.school)} cantrip`
+      : `${num2pos(
+          spellInfo.level
+        )}-level ${spellInfo.school.toLocaleLowerCase()} spell`;
+
+  const getVSMString = () =>
+    `${spellInfo.hasVerbalComponent ? "V" : ""}${
+      spellInfo.hasSomaticComponent ? "S" : ""
+    }${spellInfo.hasMaterialComponent ? "M" : ""}`;
+
+  const makeFeature = (title: string, value: string) => (
+    <View style={styles.featureItem}>
+      <Text style={[StyleProvider.styles.listItemTextWeak, styles.featureText]}>
+        {title}
+      </Text>
+      <Text style={[StyleProvider.styles.listItemTextWeak, styles.featureText]}>
+        {value}
+      </Text>
+    </View>
+  );
+
+  return (
+    <View style={[styles.container, StyleProvider.styles.mainBackground]}>
+      <View style={[styles.pageTitleContainer]}>
+        <Text style={StyleProvider.styles.pageTitleText}>
+          {spellInfo ? spellInfo.name : "Loading..."}
+        </Text>
+      </View>
+      <ScrollView contentContainerStyle={styles.scrollViewPadding}>
+        {spellInfo && (
+          <View style={styles.infoContainer}>
+            <Text style={[StyleProvider.styles.listItemTextStrong]}>
+              {getSpellLevelAndType()}
+            </Text>
+            <View style={[styles.featuresContainer, styles.infoItem]}>
+              {makeFeature("Casting Time", spellInfo.time)}
+              {makeFeature("Range", spellInfo.range)}
+              {makeFeature("Components", getVSMString())}
+              {spellInfo.hasMaterialComponent &&
+                makeFeature("Materials", spellInfo.materialComponents)}
+              {makeFeature("Duration", spellInfo.duration)}
+              {makeFeature(
+                "Concentration",
+                spellInfo.isConcentration ? "Yes" : "No"
+              )}
+              {makeFeature("Ritual", spellInfo.isRitual ? "Yes" : "No")}
+
+              {makeFeature("Available to", spellInfo.classes.join(", "))}
             </View>
+            <Text
+              style={[StyleProvider.styles.listItemTextStrong, styles.infoItem]}
+            >
+              Description
+            </Text>
+            <Text
+              style={[StyleProvider.styles.listItemTextWeak, styles.infoItem]}
+            >
+              {(() => {
+                if (descriptionXML) {
+                  const comps = DescriptionFormatter.DescriptionXML2ReactElements(
+                    descriptionXML,
+                    {
+                      extraStyles: [
+                        StyleProvider.styles.listItemTextWeak,
+                        styles.infoItem
+                      ]
+                    }
+                  );
+                  return comps;
+                }
+              })()}
+            </Text>
           </View>
-          {props.extraButtons && props.extraButtons}
-        </>
-      ) : (
-        <View>
-          <Text>Unable to load spell data</Text>
-        </View>
-      )}
-    </ScrollView>
+        )}
+      </ScrollView>
+    </View>
   );
 };
 
@@ -230,32 +153,31 @@ const styles = StyleSheet.create({
   container: {
     flex: 1
   },
-  innerBox: {
-    paddingHorizontal: 30,
-    paddingVertical: 20
+  pageTitleContainer: {
+    height: 93,
+    borderBottomColor: StyleProvider.styles.listItemDivider.borderColor,
+    borderBottomWidth: StyleProvider.styles.listItemDivider.borderWidth,
+    borderStyle: StyleProvider.styles.listItemDivider.borderStyle,
+    justifyContent: "center",
+    alignItems: "center"
   },
-  headerMargin: {
-    marginBottom: 20
-  },
-  infoBox: {
-    flexDirection: "row",
-    marginTop: 3
-  },
-  leftInfoItem: {
-    flexBasis: 160,
-    fontSize: 19
-  },
-  rightInfoItem: {
-    flex: 1,
-    fontSize: 17
+  scrollViewPadding: {
+    padding: StyleProvider.styles.edgePadding.padding
   },
   infoContainer: {
-    marginTop: 20
+    borderBottomColor: StyleProvider.styles.listItemDivider.borderColor,
+    borderBottomWidth: StyleProvider.styles.listItemDivider.borderWidth,
+    borderTopColor: StyleProvider.styles.listItemDivider.borderColor,
+    borderTopWidth: StyleProvider.styles.listItemDivider.borderWidth,
+    borderStyle: StyleProvider.styles.listItemDivider.borderStyle,
+    padding: StyleProvider.styles.edgePadding.padding
   },
-  textTopMargin: {
-    marginTop: 10
+  infoItem: {
+    marginTop: StyleProvider.styles.edgePadding.padding
   },
-  rightText: {
-    textAlign: "right"
-  }
+  featuresContainer: {},
+  featureItem: {
+    flexDirection: "row"
+  },
+  featureText: { flex: 0.5, lineHeight: 20 }
 });

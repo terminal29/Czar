@@ -1,6 +1,5 @@
 import * as React from "react";
 import { Text } from "react-native";
-import { AppStyles } from "../styles/AppStyles";
 import { Spell } from "../structs/Spell";
 import * as xml2js from "react-native-xml2js";
 import { v4 as uuid } from "react-native-uuid";
@@ -18,7 +17,6 @@ function DescriptionXML2ReactElements(
           <Text
             key={uuid()}
             style={[
-              AppStyles.infoText,
               { fontStyle: "italic" },
               ...(options
                 ? options.extraStyles
@@ -35,7 +33,6 @@ function DescriptionXML2ReactElements(
           <Text
             key={uuid()}
             style={[
-              AppStyles.infoText,
               { fontStyle: "italic" },
               ...(options
                 ? options.extraStyles
@@ -61,7 +58,6 @@ function DescriptionXML2ReactElements(
       <Text
         key={uuid()}
         style={[
-          AppStyles.infoText,
           ...(options ? (options.extraStyles ? options.extraStyles : []) : [])
         ]}
       >
