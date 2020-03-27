@@ -14,16 +14,18 @@ interface SpellSourceItemProps {
 const SpellSourceItem = (props: SpellSourceItemProps) => {
   return (
     <View style={[styles.addBoxContainer, props.style]}>
-      <Text
-        style={[
-          props.disabled
-            ? StyleProvider.styles.listItemTextWeak
-            : StyleProvider.styles.listItemTextStrong,
-          styles.sourceTextInput
-        ]}
-      >
-        {props.sourceURL}
-      </Text>
+      <View style={styles.sourceTextInput}>
+        <Text
+          style={[
+            props.disabled
+              ? StyleProvider.styles.listItemTextWeak
+              : StyleProvider.styles.listItemTextStrong
+          ]}
+        >
+          {props.sourceURL}
+        </Text>
+      </View>
+
       <TouchableOpacity
         onPress={() => props.onRemoveButtonPressed?.(props.sourceURL)}
         containerStyle={[styles.addSourceButton]}
@@ -53,7 +55,7 @@ const styles = StyleSheet.create({
     paddingLeft: StyleProvider.styles.edgePadding.padding,
     flexDirection: "row"
   },
-  sourceTextInput: { flex: 1 },
+  sourceTextInput: { flex: 1, justifyContent: "center" },
   addSourceButton: {
     flexBasis: 60,
     justifyContent: "center",

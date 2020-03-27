@@ -139,9 +139,13 @@ export default class SpellProvider {
     SpellProvider.notifyListeners();
     await SpellProvider.clearStoredSpells();
 
-    const getIndexFiles = async (url: string) => {
+    const getIndexFiles = async (url: string, toCancel: () => boolean) => {
       return fetch(url)
         .then(async response => {
+          if (toCancel()) {
+            console.log("cancelling");
+            throw Error();
+          }
           console.log(`Fetching ${url}`);
           await nextFrame();
           return response.text();
@@ -165,7 +169,7 @@ export default class SpellProvider {
             for (let fileList of xml["index"]["files"]) {
               for (let file of fileList["file"]) {
                 await nextFrame();
-                urls.push(await getIndexFiles(file["$"]["url"]));
+                urls.push(await getIndexFiles(file["$"]["url"], toCancel));
               }
             }
           }
@@ -213,9 +217,15 @@ export default class SpellProvider {
       position: Toast.positions.BOTTOM
     });
     const providedUrls = await SpellProvider.getSourceURLs();
+    let cancel = false;
     const allUrls = (
       await Promise.all(
-        providedUrls.map(async url => await getIndexFiles(url.url))
+        providedUrls.map(
+          async url =>
+            await getIndexFiles(url.url, () => cancel).catch(
+              () => (cancel = true)
+            )
+        )
       )
     ).flat(Infinity);
     Toast.show(`Parsing spells...`, {

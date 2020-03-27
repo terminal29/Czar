@@ -70,6 +70,8 @@ export default function App() {
             })
             .catch(e => {
               console.log(e);
+              setSpellsLoading(false);
+              Toast.show("Failed to download spell data");
             });
         }}
         onSpellSourceAdded={sourceURL =>
