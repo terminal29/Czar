@@ -1,6 +1,7 @@
 import * as React from "react";
 import { Text, View, StyleSheet } from "react-native";
 import { StyleProvider } from "../data/StyleProvider";
+import { TouchableOpacity } from "react-native-gesture-handler";
 
 interface FloatingTabBarProps {
   navigationState: any;
@@ -15,12 +16,17 @@ const FloatingTabBar = (props: FloatingTabBarProps) => {
     <View style={styles.container}>
       <View style={styles.navOuterContainer}>
         <View style={styles.navInnerContainer}>
-          {props.navigationState.routeNames.map((routeName, index) =>
-            props.getIconForRouteName(
-              routeName,
-              props.navigationState.index === index
-            )
-          )}
+          {props.navigationState.routeNames.map((routeName, index) => (
+            <TouchableOpacity
+              containerStyle={styles.buttonTouchArea}
+              onPress={() => props.navigation.navigate(routeName)}
+            >
+              {props.getIconForRouteName(
+                routeName,
+                props.navigationState.index === index
+              )}
+            </TouchableOpacity>
+          ))}
         </View>
       </View>
     </View>
@@ -46,12 +52,20 @@ const styles = StyleSheet.create({
     backgroundColor: StyleProvider.styles.mainBackground.backgroundColor,
     flex: 1,
     borderRadius: 10,
-    padding: StyleProvider.styles.edgePadding.padding,
+    paddingVertical: StyleProvider.styles.edgePadding.padding,
+    paddingHorizontal: StyleProvider.styles.edgePadding.padding / 2,
     borderColor: StyleProvider.styles.navbarItemUnfoccused.color,
     borderWidth: StyleProvider.styles.listItemDivider.borderWidth,
     borderStyle: StyleProvider.styles.listItemDivider.borderStyle,
     flexDirection: "row",
-    justifyContent: "space-around",
     alignItems: "center"
+  },
+  buttonTouchArea: {
+    flex: 1,
+    alignItems: "center",
+    justifyContent: "center",
+    height: "100%",
+    borderRadius: 10,
+    marginHorizontal: StyleProvider.styles.edgePadding.padding / 2
   }
 });
