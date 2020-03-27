@@ -255,9 +255,7 @@ const SpellsKnownScreen = (props: SpellsKnownScreenProps) => {
         key={item.id}
         spellID={item}
         onPress={() => props.onSpellPressed?.(item)}
-        style={[
-          index !== dataProvider.getSize() - 1 && styles.listItemBorderBottom
-        ]}
+        style={[styles.listItemBorderBottom]}
       />
     );
   };
@@ -269,20 +267,6 @@ const SpellsKnownScreen = (props: SpellsKnownScreenProps) => {
       dim.height = 65;
     }
   );
-
-  const renderFooter = () =>
-    dataProvider.getSize() !== maxFilteredSpells.current && (
-      <View style={styles.ptrContainer}>
-        <Text style={[StyleProvider.styles.listItemTextWeak, styles.ptrText]}>
-          Loading
-        </Text>
-        <Spinner
-          type={"FadingCircleAlt"}
-          size={30}
-          color={StyleProvider.styles.listItemTextWeak.color}
-        />
-      </View>
-    );
 
   return (
     <View style={[styles.container, StyleProvider.styles.mainBackground]}>
@@ -306,14 +290,15 @@ const SpellsKnownScreen = (props: SpellsKnownScreenProps) => {
         <RecyclerListView
           onEndReachedThreshold={0.5}
           renderAheadOffset={65 * spellsPerBatch}
-          scrollViewProps={{ style: [styles.listContainer] }}
+          scrollViewProps={{
+            style: [styles.listContainer],
+            contentContainerStyle: [styles.listContainerContainer]
+          }}
           dataProvider={dataProvider}
           rowRenderer={(type, data, index) =>
             renderSpellItem({ item: data, index })
           }
           layoutProvider={layoutProvider}
-          renderFooter={renderFooter}
-          extendedState={{ asdf: filteredSpellIDs }}
         />
       )}
     </View>
@@ -392,6 +377,9 @@ const styles = StyleSheet.create({
   },
   listContainer: {
     paddingHorizontal: StyleProvider.styles.edgePadding.padding
+  },
+  listContainerContainer: {
+    paddingBottom: StyleProvider.styles.navbar.height
   },
   ptrContainer: {
     justifyContent: "center",

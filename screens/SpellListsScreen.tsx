@@ -71,7 +71,8 @@ const styles = StyleSheet.create({
     alignItems: "center"
   },
   scrollViewContentContainer: {
-    padding: StyleProvider.styles.edgePadding.padding
+    padding: StyleProvider.styles.edgePadding.padding,
+    paddingBottom: StyleProvider.styles.navbar.height
   },
   addSpellListButtonContainer: {
     borderBottomColor: StyleProvider.styles.listItemDivider.borderColor,

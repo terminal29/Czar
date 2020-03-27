@@ -50,7 +50,7 @@ class StyleProvider {
       //size:22.25
     },
     navbar: {
-      height: -70 - 2 * 17 // edgePadding
+      height: 70 + 2 * 17 // edgePadding
     },
     navbarItemFocussed: {
       color: "#EFEFEF"
