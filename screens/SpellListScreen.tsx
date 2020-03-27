@@ -75,7 +75,9 @@ const SpellListScreen = (props: SpellListScreenProps) => {
         onPull={() => onPullDown()}
         willPull={() => {}}
       >
-        {/* Content Scrollview */}
+        {spellIDs.map(spellID => (
+          <SpellItemCompact spellID={spellID} onPress={props.onSpellPressed} />
+        ))}
         <View style={styles.ptrContainer}>
           <Text style={[StyleProvider.styles.listItemTextWeak]}>
             Pull to Edit

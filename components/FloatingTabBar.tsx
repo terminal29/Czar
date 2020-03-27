@@ -41,7 +41,7 @@ const styles = StyleSheet.create({
     height: 0
   },
   navOuterContainer: {
-    top: -70 - 2 * StyleProvider.styles.edgePadding.padding,
+    top: -StyleProvider.styles.navbar.height,
     padding: StyleProvider.styles.edgePadding.padding / 2,
     bottom: 0,
     left: 0,

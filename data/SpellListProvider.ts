@@ -57,17 +57,18 @@ export default class SpellListProvider {
     const db = await SpellProvider.getDB();
     if (!this.hasCheckedTables) {
       this.hasCheckedTables = true;
-      // ensure spell list table exists
       await db.executeSql(`CREATE TABLE IF NOT EXISTS ${SpellListProvider.spellListTableName}(
             id TEXT PRIMARY KEY NOT NULL,
             name TEXT NOT NULL,
-            thumbnailURI TEXT
+            thumbnailURI TEXT,
+            listIndex INTEGER
             );`);
 
       // ensure spell list ids table exists
       await db.executeSql(`CREATE TABLE IF NOT EXISTS ${SpellListProvider.spellListSpellIDsTableName}(
             id TEXT NOT NULL,
             spellID TEXT NOT NULL,
+            spellIndex INTEGER,
             PRIMARY KEY (id, spellID)
             );`);
     }
@@ -79,32 +80,75 @@ export default class SpellListProvider {
   ): Promise<SpellID[]> {
     const ids = SpellProvider.getRowData(
       await (await this.getDB()).executeSql(
-        `SELECT * from ${SpellListProvider.spellListSpellIDsTableName} where id='${list.id}'`
+        `SELECT * from ${SpellListProvider.spellListSpellIDsTableName} where id='${list.id}' ORDER BY spellIndex ASC`
       )
     );
     return ids.map(id => new SpellID(id.spellID));
   }
 
   public static async addSpellIDToList(list: SpellList, id: SpellID) {
+    const existingIDs = await SpellListProvider.getSpellListSpellIDs(list);
+
     await (await this.getDB()).executeSql(
-      `INSERT INTO ${SpellListProvider.spellListSpellIDsTableName} (id, spellID) VALUES ('${list.id}', '${id.id}')`
+      `INSERT INTO ${SpellListProvider.spellListSpellIDsTableName} (id, spellID, spellIndex) VALUES ('${list.id}', '${id.id}', ${existingIDs.length})`
     );
     console.log(`Added spell ${id.id} to ${list.name}`);
     this.notifySingleListListeners(list.id);
+  }
+
+  public static async addSpellIDtoListAtIndex(
+    list: SpellList,
+    id: SpellID,
+    index: number
+  ) {
+    const allSpells = await this.getSpellListSpellIDs(list);
+    allSpells.splice(index, 0, id);
+    await this.clearSpellListSpellIDs(list);
+    await this.addMultipleSpellsToList(list, allSpells);
+  }
+
+  private static async clearSpellListSpellIDs(list: SpellList) {
+    await (await this.getDB()).executeSql(
+      `DELETE FROM ${SpellListProvider.spellListSpellIDsTableName} WHERE id='${list.id}'`
+    );
+  }
+
+  private static async addMultipleSpellsToList(
+    list: SpellList,
+    ids: Array<SpellID>
+  ) {
+    const promises = [];
+    ids.forEach((id, index) => {
+      promises.push(
+        this.getDB().then(db =>
+          db.executeSql(
+            `INSERT INTO ${SpellListProvider.spellListSpellIDsTableName} (id, spellID, spellIndex) VALUES ('${list.id}', '${id.id}', ${index})`
+          )
+        )
+      );
+    });
+    await Promise.all(promises);
   }
 
   public static async removeSpellIDFromList(list: SpellList, id: SpellID) {
     await (await this.getDB()).executeSql(
       `DELETE FROM ${SpellListProvider.spellListSpellIDsTableName} WHERE id='${list.id}' AND spellID='${id.id}'`
     );
-    console.log(`Removed spell ${id.id} from ${list.name}`);
+
+    // Get all spells after removal
+    const allSpells = await this.getSpellListSpellIDs(list);
+    //Clear list
+    await this.clearSpellListSpellIDs(list);
+    // Add spells back (already ordered properly)
+    await this.addMultipleSpellsToList(list, allSpells);
+
     this.notifySingleListListeners(list.id);
   }
 
   public static async getSpellLists(): Promise<SpellList[]> {
     const ids = SpellProvider.getRowData(
       await (await this.getDB()).executeSql(
-        `SELECT * from ${SpellListProvider.spellListTableName}`
+        `SELECT * from ${SpellListProvider.spellListTableName} ORDER BY listIndex ASC`
       )
     );
     return ids.map(
@@ -113,12 +157,15 @@ export default class SpellListProvider {
   }
 
   public static async addSpellList(list: SpellList) {
+    const spellLists = await this.getSpellLists();
     await (await this.getDB()).executeSql(
       `INSERT INTO ${
         SpellListProvider.spellListTableName
-      } (id, name, thumbnailURI) VALUES ('${list.id}', '${encodeURI(
+      } (id, name, thumbnailURI, listIndex) VALUES ('${list.id}', '${encodeURI(
         list.name
-      )}',${list.thumbnailURI ? `'${encodeURI(list.thumbnailURI)}'` : "NULL"})`
+      )}',${
+        list.thumbnailURI ? `'${encodeURI(list.thumbnailURI)}'` : "NULL"
+      }, ${spellLists.length})`
     );
     console.log(`Added spell list ${list.name}`);
     this.notifyListsListeners();

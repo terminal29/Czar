@@ -1,30 +1,26 @@
-import React, { useState, useEffect, useReducer, useCallback } from "react";
-import { StyleSheet, Text, View } from "react-native";
+import React, { useState, useEffect, useCallback, useRef } from "react";
+import { StyleSheet, Text, View, Button } from "react-native";
 import SpellListsScreen from "./screens/SpellListsScreen";
 import { SpellList } from "./structs/SpellList";
 import SpellSourcesScreen from "./screens/SpellSourcesScreen";
 import SpellsKnownScreen from "./screens/SpellsKnownScreen";
 import SpellInfoScreen from "./screens/SpellInfoScreen";
 import SpellListScreen from "./screens/SpellListScreen";
-import Spinner from "react-native-spinkit";
 import { NavigationContainer, TabActions } from "@react-navigation/native";
 import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
 import { AppStyles } from "./styles/AppStyles";
 import SpellProvider from "./data/SpellProvider";
 import { createStackNavigator } from "@react-navigation/stack";
-import RoundedIconButton from "./components/RoundedIconButton";
 import Toast from "react-native-root-toast";
-import { SpellListAddBox } from "./components/SpellListAddBox";
 import SpellListAddScreen from "./screens/SpellListAddScreen";
 import { SpellID } from "./structs/SpellID";
 import SpellListProvider from "./data/SpellListProvider";
-import AddToSpellListScreen from "./screens/AddToSpellListScreen";
 import SpellListEditScreen from "./screens/SpellListEditScreen";
-import { useMemoOne } from "use-memo-one";
 import FloatingTabBar from "./components/FloatingTabBar";
 import MdIcon from "react-native-vector-icons/MaterialIcons";
 import McIcon from "react-native-vector-icons/MaterialCommunityIcons";
 import { StyleProvider } from "./data/StyleProvider";
+import Modal from "react-native-modal";
 
 const Tab = createBottomTabNavigator();
 const Stack = createStackNavigator();
@@ -32,6 +28,8 @@ export default function App() {
   const [spellLists, setSpellLists] = useState<Array<SpellList>>([]);
   const [spellSources, setSpellSources] = useState([]);
   const [spellsLoading, setSpellsLoading] = useState(false);
+  const [addToListModalVisible, setAddToListModalVisible] = useState(false);
+  const lastShownSpellID = useRef("");
 
   useEffect(() => {
     SpellProvider.getSpellIDs().then(ids =>
@@ -179,11 +177,53 @@ export default function App() {
 
   const MainAppScreen = useCallback(
     () => (
-      <Tab.Navigator tabBar={TabBar} initialRouteName={"Sources"}>
-        <Tab.Screen name="Sources">{SourcesScreen}</Tab.Screen>
-        <Tab.Screen name="SpellLists">{ListsScreen}</Tab.Screen>
-        <Tab.Screen name="Search">{KnownScreen}</Tab.Screen>
-      </Tab.Navigator>
+      <>
+        <Tab.Navigator tabBar={TabBar} initialRouteName={"Sources"}>
+          <Tab.Screen name="Sources">{SourcesScreen}</Tab.Screen>
+          <Tab.Screen name="SpellLists">{ListsScreen}</Tab.Screen>
+          <Tab.Screen name="Search">{KnownScreen}</Tab.Screen>
+        </Tab.Navigator>
+        <Modal isVisible={addToListModalVisible}>
+          <View
+            style={{
+              flex: 1,
+              backgroundColor:
+                StyleProvider.styles.mainBackground.backgroundColor
+            }}
+          >
+            <Text style={[StyleProvider.styles.listItemTextStrong]}>
+              Choose a list to add this spell to {spellLists.length}
+            </Text>
+            {spellLists.map(list => (
+              <Button
+                key={list.id}
+                title={list.name}
+                onPress={async () => {
+                  setAddToListModalVisible(false);
+                  try {
+                    await SpellListProvider.addSpellIDToList(
+                      list,
+                      new SpellID(lastShownSpellID.current)
+                    );
+                    Toast.show("Success!", {
+                      duration: Toast.durations.LONG
+                    });
+                  } catch {
+                    Toast.show("This spell is already on that list!", {
+                      duration: Toast.durations.LONG
+                    });
+                  }
+                }}
+              />
+            ))}
+            <Button
+              key={"cancel"}
+              title={"Cancel"}
+              onPress={() => setAddToListModalVisible(false)}
+            ></Button>
+          </View>
+        </Modal>
+      </>
     ),
     [SourcesScreen, ListsScreen, KnownScreen, spellsLoading]
   );
@@ -193,26 +233,19 @@ export default function App() {
       <SpellInfoScreen
         spellID={route.params.spellID}
         extraButtons={[
-          <RoundedIconButton
-            key={"add"}
-            onPressed={() =>
-              navigation.push("AddToSpellListScreen", {
-                spellID: route.params.spellID
-              })
+          {
+            text: "Add to list",
+            iconName: "add",
+            onPress: () => {
+              lastShownSpellID.current = route.params.spellID.id;
+              setAddToListModalVisible(true);
             }
-            text={"Add to List"}
-            iconName={"ios-add"}
-            disabled={false}
-            style={styles.overlayButtonTopMargin}
-          />,
-          <RoundedIconButton
-            key={"back"}
-            onPressed={() => navigation.goBack()}
-            text={"Back"}
-            iconName={"ios-arrow-back"}
-            disabled={false}
-            style={styles.overlayButtonFullMargin}
-          />
+          },
+          {
+            text: "Go back",
+            iconName: "keyboard-backspace",
+            onPress: () => navigation.goBack()
+          }
         ]}
       />
     ),
@@ -224,28 +257,11 @@ export default function App() {
       <SpellInfoScreen
         spellID={route.params.spellID}
         extraButtons={[
-          <RoundedIconButton
-            key={"remove"}
-            onPressed={() => {
-              SpellListProvider.removeSpellIDFromList(
-                route.params.spellList,
-                route.params.spellID
-              );
-              navigation.goBack();
-            }}
-            text={"Remove from list"}
-            iconName={"ios-close"}
-            disabled={false}
-            style={styles.overlayButtonTopMargin}
-          />,
-          <RoundedIconButton
-            key={"back"}
-            onPressed={() => navigation.goBack()}
-            text={"Back"}
-            iconName={"ios-arrow-back"}
-            disabled={false}
-            style={styles.overlayButtonFullMargin}
-          />
+          {
+            text: "Go back",
+            iconName: "ios-arrow-back",
+            onPress: () => navigation.goBack()
+          }
         ]}
       />
     ),
@@ -329,23 +345,6 @@ export default function App() {
     [spellLists]
   );
 
-  const AddSpellToSpellListScreen = useCallback(
-    ({ route, navigation }) => {
-      return (
-        <AddToSpellListScreen
-          spellID={route.params.spellID}
-          spellLists={spellLists}
-          onListPressed={(list: SpellList) => {
-            SpellListProvider.addSpellIDToList(list, route.params.spellID);
-            navigation.goBack();
-          }}
-          onCancelPressed={() => navigation.goBack()}
-        />
-      );
-    },
-    [spellLists, SingleSpellListScreen]
-  );
-
   return (
     <NavigationContainer>
       <Stack.Navigator headerMode="none" initialRouteName="MainApp">
@@ -356,9 +355,6 @@ export default function App() {
         </Stack.Screen>
         <Stack.Screen name="SpellListScreen">
           {SingleSpellListScreen}
-        </Stack.Screen>
-        <Stack.Screen name="AddToSpellListScreen">
-          {AddSpellToSpellListScreen}
         </Stack.Screen>
         <Stack.Screen name="ModifySpellListScreen">
           {ModifySpellListScreen}

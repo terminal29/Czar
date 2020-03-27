@@ -15,6 +15,7 @@ import MdIcon from "react-native-vector-icons/MaterialIcons";
 import PullableScrollView from "../components/PullableScrollView";
 import Animated from "react-native-reanimated";
 import { useMemoOne } from "use-memo-one";
+import ModSpellItemCompact from "../components/ModSpellItemCompact";
 
 interface SpellListEditScreenProps {
   list: SpellList;
@@ -77,6 +78,17 @@ const SpellListEditScreen = (props: SpellListEditScreenProps) => {
         onPull={onPullDown}
         willPull={() => {}}
       >
+        <View>
+          {spellIDs.map(spellID => (
+            <ModSpellItemCompact
+              spellID={spellID}
+              onRemovePressed={() => {}}
+              onUpPressed={() => {}}
+              onDownPressed={() => {}}
+            />
+          ))}
+        </View>
+
         <View style={styles.ptrContainer}>
           <Text style={[StyleProvider.styles.listItemTextWeak]}>
             Pull to Confirm

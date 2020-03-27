@@ -1,5 +1,11 @@
 import * as React from "react";
-import { Text, View, StyleSheet, ScrollView } from "react-native";
+import {
+  Text,
+  View,
+  StyleSheet,
+  ScrollView,
+  TouchableOpacity
+} from "react-native";
 import { SpellID } from "../structs/SpellID";
 import { useEffect, useState } from "react";
 import SpellProvider from "../data/SpellProvider";
@@ -8,11 +14,12 @@ import SpellItemCompact from "../components/SpellItemCompact";
 import DescriptionFormatter from "../data/DescriptionFormatter";
 import { AppStyles } from "../styles/AppStyles";
 import { StyleProvider } from "../data/StyleProvider";
+import MdIcon from "react-native-vector-icons/MaterialIcons";
 
 interface SpellInfoScreenProps {
   spellID: SpellID;
   onBackPressed?: Function;
-  extraButtons?: any[];
+  extraButtons?: Array<{ text: string; iconName: string; onPress: () => void }>;
 }
 
 const SpellInfoScreen = (props: SpellInfoScreenProps) => {
@@ -78,6 +85,29 @@ const SpellInfoScreen = (props: SpellInfoScreenProps) => {
       spellInfo.hasSomaticComponent ? "S" : ""
     }${spellInfo.hasMaterialComponent ? "M" : ""}`;
 
+  const makeButton = (text, iconName, onPress?) => (
+    <TouchableOpacity
+      style={styles.addSpellListButtonContainer}
+      onPress={() => onPress?.()}
+    >
+      <Text
+        style={[
+          StyleProvider.styles.listItemTextStrong,
+          styles.addSpellListText
+        ]}
+      >
+        {text}
+      </Text>
+      <View style={styles.iconContainer}>
+        <MdIcon
+          size={20}
+          name={iconName}
+          style={[StyleProvider.styles.listItemIconStrong]}
+        />
+      </View>
+    </TouchableOpacity>
+  );
+
   const makeFeature = (title: string, value: string) => (
     <View style={styles.featureItem}>
       <Text style={[StyleProvider.styles.listItemTextWeak, styles.featureText]}>
@@ -142,6 +172,10 @@ const SpellInfoScreen = (props: SpellInfoScreenProps) => {
             </Text>
           </View>
         )}
+        {props.extraButtons &&
+          props.extraButtons.map(b =>
+            makeButton(b.text, b.iconName, b.onPress)
+          )}
       </ScrollView>
     </View>
   );
@@ -179,5 +213,31 @@ const styles = StyleSheet.create({
   featureItem: {
     flexDirection: "row"
   },
-  featureText: { flex: 0.5, lineHeight: 20 }
+  featureText: { flex: 0.5, lineHeight: 20 },
+  addSpellListButtonContainer: {
+    borderBottomColor: StyleProvider.styles.listItemDivider.borderColor,
+    borderBottomWidth: StyleProvider.styles.listItemDivider.borderWidth,
+    borderTopColor: StyleProvider.styles.listItemDivider.borderColor,
+    borderTopWidth: StyleProvider.styles.listItemDivider.borderWidth,
+    borderStyle: StyleProvider.styles.listItemDivider.borderStyle,
+    padding: StyleProvider.styles.edgePadding.padding,
+    paddingRight: StyleProvider.styles.edgePadding.padding - 10,
+    marginTop: StyleProvider.styles.edgePadding.padding,
+    flexDirection: "row"
+  },
+  addSpellListText: {
+    flex: 1
+  },
+  iconContainer: {
+    marginVertical: -10,
+    flex: 0,
+    alignItems: "center",
+    justifyContent: "center"
+  },
+  spellListItem: {
+    marginTop: StyleProvider.styles.edgePadding.padding,
+    borderBottomColor: StyleProvider.styles.listItemDivider.borderColor,
+    borderBottomWidth: StyleProvider.styles.listItemDivider.borderWidth,
+    borderStyle: StyleProvider.styles.listItemDivider.borderStyle
+  }
 });
