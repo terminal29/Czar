@@ -6,94 +6,140 @@ import {
   TextInput,
   Picker,
   ScrollView,
-  FlatList
+  FlatList,
+  Dimensions
 } from "react-native";
 import MdIcon from "react-native-vector-icons/MaterialIcons";
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import SpellProvider from "../data/SpellProvider";
 import { SpellID } from "../structs/SpellID";
 import nextFrame from "next-frame";
 import { StyleProvider } from "../data/StyleProvider";
 import { TouchableOpacity } from "react-native-gesture-handler";
 import SpellItemCompact from "../components/SpellItemCompact";
+import { useCallbackOne, useMemoOne } from "use-memo-one";
+import Toast from "react-native-root-toast";
+import {
+  RecyclerListView,
+  DataProvider,
+  LayoutProvider
+} from "recyclerlistview";
+import Spinner from "react-native-spinkit";
 
 interface SpellsKnownScreenProps {
   onSpellPressed?: Function;
 }
 
+let { width } = Dimensions.get("window");
+
+const makeCancelable = promise => {
+  let hasCanceled_ = false;
+
+  const wrappedPromise = new Promise((resolve, reject) => {
+    promise.then(
+      val => (hasCanceled_ ? reject({ isCanceled: true }) : resolve(val)),
+      error => (hasCanceled_ ? reject({ isCanceled: true }) : reject(error))
+    );
+  });
+
+  return {
+    promise: wrappedPromise,
+    cancel() {
+      hasCanceled_ = true;
+    }
+  };
+};
+
 const SpellsKnownScreen = (props: SpellsKnownScreenProps) => {
   const [filterBoxVisible, setFilterBoxVisibility] = useState(false);
-  const [filteredSpellIDs, setFilteredSpellIDs] = useState<Array<SpellID>>([]);
-  const [loading, setLoading] = useState(false);
+
+  const maxFilteredSpells = useRef(0);
+  const filteredSpellIDs = useRef<Array<SpellID>>([]);
+
+  const onSearchFiltersSettled = useRef(0);
+  const onUpdatingSearchResults = useRef(null);
+
+  const spellsPerBatch = 30;
 
   const [spellName, setSpellName] = useState("");
-
   const [spellClasses, setSpellClasses] = useState([]);
   const [selectedSpellClass, setSelectedSpellClass] = useState("any");
-
   const [spellLevels, setSpellLevels] = useState([]);
   const [selectedSpellLevel, setSelectedSpellLevel] = useState("any");
-
   const [spellSchools, setSpellSchools] = useState([]);
   const [selectedSpellSchool, setSelectedSpellSchool] = useState("any");
 
-  useEffect(() => {
-    let cancelled = false;
-    setLoading(true);
-    const spellClass = selectedSpellClass !== "any" ? [selectedSpellClass] : [];
-    const spellSchool =
-      selectedSpellSchool !== "any" ? [selectedSpellSchool] : [];
-    const spellLevel = selectedSpellLevel !== "any" ? [selectedSpellLevel] : [];
-    const getSpells = async () => {
-      const iterator = await SpellProvider.getSpellIDsByFilters(
-        spellName,
+  const [dataProvider, setDataProvider] = useState(
+    new DataProvider((r1, r2) => {
+      return r1.id !== r2.id;
+    })
+  );
+
+  const getNewSpellIDs = () =>
+    new Promise<Array<SpellID>>(async (resolve, reject) => {
+      const name = spellName;
+      const spellClass =
+        selectedSpellClass !== "any" ? [selectedSpellClass] : [];
+      const spellSchool =
+        selectedSpellSchool !== "any" ? [selectedSpellSchool] : [];
+      const spellLevel =
+        selectedSpellLevel !== "any" ? [selectedSpellLevel] : [];
+
+      const spellIDCount = await SpellProvider.getNumSpellsByFilters(
+        name,
         spellClass,
         spellSchool,
         spellLevel
       );
-      let nextSpell = await iterator.next();
-      let additionalShownSpells = [];
-      while (!cancelled && !nextSpell.done) {
-        if (nextSpell.value != null) {
-          additionalShownSpells.push(nextSpell.value);
-          await nextFrame();
-        }
-        if (additionalShownSpells.length == 20) {
-          setFilteredSpellIDs(additionalShownSpells);
-        }
-        nextSpell = await iterator.next();
-      }
-      if (!cancelled) {
-        setLoading(false);
-        setFilteredSpellIDs(additionalShownSpells);
-      }
-    };
+      const spellIDs = await SpellProvider.getSpellIDsByFiltersSection(
+        name,
+        0,
+        spellIDCount,
+        spellClass,
+        spellSchool,
+        spellLevel
+      );
+      resolve(spellIDs);
+    });
 
-    getSpells();
-
+  useEffect(() => {
+    if (onSearchFiltersSettled.current) {
+      clearTimeout(onSearchFiltersSettled.current);
+    }
+    onSearchFiltersSettled.current = setTimeout(() => {
+      onUpdatingSearchResults.current = makeCancelable(getNewSpellIDs());
+      onUpdatingSearchResults.current.promise.then(spellIDs => {
+        filteredSpellIDs.current = spellIDs;
+        maxFilteredSpells.current = spellIDs.length;
+        setDataProvider(dataProvider.cloneWithRows(filteredSpellIDs.current));
+        console.log("Updated spell list");
+      });
+    }, 500);
     return () => {
-      cancelled = true;
+      if (onSearchFiltersSettled.current)
+        // timeout has handle so cancel
+        clearTimeout(onSearchFiltersSettled.current);
+      if (onUpdatingSearchResults.current) {
+        // Currently getting data so cancel
+        onUpdatingSearchResults.current.cancel();
+      }
     };
   }, [spellName, selectedSpellClass, selectedSpellLevel, selectedSpellSchool]);
 
   const updateClassList = (classList: Array<string>) => {
     setSpellClasses(classList.sort());
-    setLoading(false);
   };
   const updateLevelList = (levelList: Array<string>) => {
     setSpellLevels(levelList.sort());
-    setLoading(false);
   };
   const updateSchoolList = (schoolList: Array<string>) => {
     setSpellSchools(schoolList.sort());
-    setLoading(false);
   };
 
   useEffect(() => {
     SpellProvider.observeClassList(updateClassList);
     SpellProvider.observeLevelList(updateLevelList);
     SpellProvider.observeSchoolList(updateSchoolList);
-    setLoading(true);
     return () => {
       SpellProvider.unObserveClassList(updateClassList);
       SpellProvider.unObserveLevelList(updateLevelList);
@@ -202,19 +248,41 @@ const SpellsKnownScreen = (props: SpellsKnownScreenProps) => {
       )}
     </View>
   );
-  const renderSpellItem = useCallback(
-    ({ item, index }) => (
+
+  const renderSpellItem = ({ item, index }) => {
+    return (
       <SpellItemCompact
         key={item.id}
         spellID={item}
         onPress={() => props.onSpellPressed?.(item)}
         style={[
-          index !== filteredSpellIDs.length - 1 && styles.listItemBorderBottom
+          index !== dataProvider.getSize() - 1 && styles.listItemBorderBottom
         ]}
       />
-    ),
-    [filteredSpellIDs]
+    );
+  };
+
+  const layoutProvider = new LayoutProvider(
+    () => 0,
+    (type, dim) => {
+      dim.width = width - 2 * styles.listContainer.paddingHorizontal;
+      dim.height = 65;
+    }
   );
+
+  const renderFooter = () =>
+    dataProvider.getSize() !== maxFilteredSpells.current && (
+      <View style={styles.ptrContainer}>
+        <Text style={[StyleProvider.styles.listItemTextWeak, styles.ptrText]}>
+          Loading
+        </Text>
+        <Spinner
+          type={"FadingCircleAlt"}
+          size={30}
+          color={StyleProvider.styles.listItemTextWeak.color}
+        />
+      </View>
+    );
 
   return (
     <View style={[styles.container, StyleProvider.styles.mainBackground]}>
@@ -222,13 +290,32 @@ const SpellsKnownScreen = (props: SpellsKnownScreenProps) => {
         <Text style={StyleProvider.styles.pageTitleText}>Spell Search</Text>
       </View>
       {makeFiltersContainer()}
-      <FlatList
+      {/*<FlatList
+        keyExtractor={keyExtractor}
         data={filteredSpellIDs}
         renderItem={renderSpellItem}
-        removeClippedSubviews={true} // Unmount components when outside of window
-        initialNumToRender={2} // Reduce initial render amount
         contentContainerStyle={styles.listContainer}
-      />
+        getItemLayout={getItemHeight}
+        removeClippedSubviews={false}
+        onEndReached={() => setToLoadMore(true)}
+        onEndReachedThreshold={0.5}
+        initialNumToRender={10}
+      />*/}
+
+      {dataProvider.getSize() > 0 && (
+        <RecyclerListView
+          onEndReachedThreshold={0.5}
+          renderAheadOffset={65 * spellsPerBatch}
+          scrollViewProps={{ style: [styles.listContainer] }}
+          dataProvider={dataProvider}
+          rowRenderer={(type, data, index) =>
+            renderSpellItem({ item: data, index })
+          }
+          layoutProvider={layoutProvider}
+          renderFooter={renderFooter}
+          extendedState={{ asdf: filteredSpellIDs }}
+        />
+      )}
     </View>
   );
 };
@@ -305,5 +392,13 @@ const styles = StyleSheet.create({
   },
   listContainer: {
     paddingHorizontal: StyleProvider.styles.edgePadding.padding
+  },
+  ptrContainer: {
+    justifyContent: "center",
+    alignItems: "center",
+    padding: StyleProvider.styles.edgePadding.padding
+  },
+  ptrText: {
+    marginBottom: 8
   }
 });

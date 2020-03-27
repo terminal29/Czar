@@ -77,7 +77,6 @@ const SpellListEditScreen = (props: SpellListEditScreenProps) => {
         onPull={onPullDown}
         willPull={() => {}}
       >
-        {/* Content Scrollview */}
         <View style={styles.ptrContainer}>
           <Text style={[StyleProvider.styles.listItemTextWeak]}>
             Pull to Confirm

@@ -20,6 +20,7 @@ import { SpellID } from "./structs/SpellID";
 import SpellListProvider from "./data/SpellListProvider";
 import AddToSpellListScreen from "./screens/AddToSpellListScreen";
 import SpellListEditScreen from "./screens/SpellListEditScreen";
+import { useMemoOne } from "use-memo-one";
 
 const Tab = createBottomTabNavigator();
 const Stack = createStackNavigator();
@@ -27,6 +28,14 @@ export default function App() {
   const [spellLists, setSpellLists] = useState<Array<SpellList>>([]);
   const [spellSources, setSpellSources] = useState([]);
   const [spellsLoading, setSpellsLoading] = useState(false);
+
+  useMemoOne(() => {
+    SpellProvider.getSpellIDs().then(ids =>
+      Promise.all(ids.map(id => SpellProvider.getSpellByID(id))).then(() =>
+        Toast.show("Loaded")
+      )
+    );
+  }, []);
 
   const updateSourceURLs = () =>
     SpellProvider.getSourceURLs().then(urls => setSpellSources(urls));

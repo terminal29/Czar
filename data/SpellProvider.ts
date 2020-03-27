@@ -9,6 +9,13 @@ import squel from "squel";
 SQLite.enablePromise(true);
 
 type AsyncFunction<O> = () => Promise<O>;
+interface FilterQueryParams {
+  fields?: string[];
+  name: string;
+  classes: string[];
+  schools: string[];
+  levels: string[];
+}
 
 interface SpellFilterIterator {
   currentIndex: number;
@@ -17,6 +24,8 @@ interface SpellFilterIterator {
 
 export default class SpellProvider {
   private static numSpells: number = 0;
+
+  private static spellCache: Spell[] = [];
 
   private static classListListeners: Function[] = [];
   private static classList: string[] = [];
@@ -31,6 +40,23 @@ export default class SpellProvider {
   public static readonly dbName = "CZAR.db";
   public static readonly spellTableName = "spells";
   public static readonly sourceTableName = "sources";
+
+  private static checkSpellCache(id: SpellID): Spell | null {
+    const spell = SpellProvider.spellCache.find(spell => spell.id === id.id);
+    return spell || null;
+  }
+
+  private static addSpellToCache(spell: Spell) {
+    SpellProvider.spellCache.push(spell);
+  }
+
+  private static removeSpellFromCache(spell: Spell) {
+    SpellProvider.spellCache.filter(sp => sp.id !== spell.id);
+  }
+
+  private static clearSpellCache() {
+    SpellProvider.spellCache = [];
+  }
 
   public static async getDB() {
     if (!SpellProvider.db) {
@@ -71,6 +97,7 @@ export default class SpellProvider {
   }
 
   private static insertSpell(db: any, spell: Spell): Promise<any> {
+    SpellProvider.addSpellToCache(spell);
     return db.executeSql(
       `INSERT INTO ${SpellProvider.spellTableName} VALUES (
       "${spell.id}",
@@ -98,11 +125,8 @@ export default class SpellProvider {
     );
   }
 
-  private static rowResponseToSpell(response: object): Spell {
-    return new Spell();
-  }
-
   public static async clearStoredSpells() {
+    SpellProvider.clearSpellCache();
     await SpellProvider.getDB().then(db =>
       db.executeSql(`DELETE FROM ${SpellProvider.spellTableName};`)
     );
@@ -357,7 +381,36 @@ export default class SpellProvider {
     );
   }
 
+  private static parseSpell(spellRaw: any): Spell {
+    const spell = new Spell();
+    spell.name = decodeURI(spellRaw.name);
+    spell.id = spellRaw.id;
+    spell.source = decodeURI(spellRaw.source);
+    spell.formattedText = decodeURI(spellRaw.formattedText);
+
+    spell.classes = JSON.parse(decodeURI(spellRaw.classes));
+
+    spell.keywords = JSON.parse(decodeURI(spellRaw.keywords));
+    spell.duration = decodeURI(spellRaw.duration);
+
+    spell.level = decodeURI(spellRaw.level);
+    spell.school = decodeURI(spellRaw.school);
+    spell.time = decodeURI(spellRaw.time);
+    spell.range = decodeURI(spellRaw.range);
+    spell.hasVerbalComponent = spellRaw.has_verbal_component === 1;
+    spell.hasSomaticComponent = spellRaw.has_somatic_component === 1;
+    spell.hasMaterialComponent = spellRaw.has_material_component === 1;
+    spell.materialComponents = spellRaw.material_components
+      ? decodeURI(spellRaw.material_components)
+      : null;
+    spell.isConcentration = spellRaw.is_concentration;
+    spell.isRitual = spellRaw.is_ritual;
+    return spell;
+  }
+
   public static async getSpellByID(spellID: SpellID): Promise<Spell> {
+    const possibleSpell = SpellProvider.checkSpellCache(spellID);
+    if (possibleSpell) return possibleSpell;
     const spellRaw = SpellProvider.getRowData(
       await (await SpellProvider.getDB()).executeSql(
         `SELECT * from ${SpellProvider.spellTableName} where id='${spellID.id}';`
@@ -366,29 +419,9 @@ export default class SpellProvider {
 
     if (spellRaw.length != 1) return null;
 
-    const spell = new Spell();
-    spell.name = decodeURI(spellRaw[0].name);
-    spell.id = spellRaw[0].id;
-    spell.source = decodeURI(spellRaw[0].source);
-    spell.formattedText = decodeURI(spellRaw[0].formattedText);
+    const spell = SpellProvider.parseSpell(spellRaw[0]);
 
-    spell.classes = JSON.parse(decodeURI(spellRaw[0].classes));
-
-    spell.keywords = JSON.parse(decodeURI(spellRaw[0].keywords));
-    spell.duration = decodeURI(spellRaw[0].duration);
-
-    spell.level = decodeURI(spellRaw[0].level);
-    spell.school = decodeURI(spellRaw[0].school);
-    spell.time = decodeURI(spellRaw[0].time);
-    spell.range = decodeURI(spellRaw[0].range);
-    spell.hasVerbalComponent = spellRaw[0].has_verbal_component === 1;
-    spell.hasSomaticComponent = spellRaw[0].has_somatic_component === 1;
-    spell.hasMaterialComponent = spellRaw[0].has_material_component === 1;
-    spell.materialComponents = spellRaw[0].material_components
-      ? decodeURI(spellRaw[0].material_components)
-      : null;
-    spell.isConcentration = spellRaw[0].is_concentration;
-    spell.isRitual = spellRaw[0].is_ritual;
+    SpellProvider.addSpellToCache(spell);
 
     return spell;
   }
@@ -410,13 +443,17 @@ export default class SpellProvider {
     return ids;
   }
 
-  public static async getSpellIDsByFilters(
-    name: string,
-    classes: string[],
-    schools: string[],
-    levels: string[]
-  ) {
+  private static makeFilterQuery({
+    fields,
+    name,
+    classes,
+    schools,
+    levels
+  }: FilterQueryParams) {
     let query = squel.select().from(SpellProvider.spellTableName);
+    if (fields) {
+      query = query.fields(fields);
+    }
     if (name && name.length > 0) {
       query = query.where(`name LIKE '%${encodeURI(name)}%'`);
     }
@@ -441,6 +478,21 @@ export default class SpellProvider {
       }
       query.where(andSchools);
     }
+    return query;
+  }
+
+  public static async getSpellIDsByFilters(
+    name: string,
+    classes: string[],
+    schools: string[],
+    levels: string[]
+  ) {
+    let query = SpellProvider.makeFilterQuery({
+      name,
+      classes,
+      schools,
+      levels
+    });
 
     let rtn: SpellFilterIterator = {
       currentIndex: 0,
@@ -462,5 +514,68 @@ export default class SpellProvider {
       }
     };
     return rtn;
+  }
+
+  public static async getNumSpellsByFilters(
+    name: string,
+    classes: string[],
+    schools: string[],
+    levels: string[]
+  ) {
+    let query = SpellProvider.makeFilterQuery({
+      fields: ["id"],
+      name,
+      classes,
+      schools,
+      levels
+    });
+    return SpellProvider.getRowData(
+      await (await SpellProvider.getDB()).executeSql(query.toString())
+    ).length;
+  }
+
+  public static async getSpellIDsByFiltersSection(
+    name: string,
+    start: number,
+    length: number,
+    classes: string[],
+    schools: string[],
+    levels: string[]
+  ) {
+    let query = SpellProvider.makeFilterQuery({
+      fields: ["id"],
+      name,
+      classes,
+      schools,
+      levels
+    });
+
+    const limitQuery = query.limit(length).offset(start);
+
+    return SpellProvider.getRowData(
+      await (await SpellProvider.getDB()).executeSql(limitQuery.toString())
+    ).map(spellInfo => new SpellID(spellInfo.id));
+  }
+
+  public static async getSpellsByFiltersSection(
+    name: string,
+    start: number,
+    length: number,
+    classes: string[],
+    schools: string[],
+    levels: string[]
+  ) {
+    let query = SpellProvider.makeFilterQuery({
+      name,
+      classes,
+      schools,
+      levels
+    });
+
+    const limitQuery = query.limit(length).offset(start);
+
+    return SpellProvider.getRowData(
+      await (await SpellProvider.getDB()).executeSql(limitQuery.toString())
+    ).map(spellInfo => SpellProvider.parseSpell(spellInfo));
   }
 }
