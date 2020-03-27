@@ -21,6 +21,10 @@ import SpellListProvider from "./data/SpellListProvider";
 import AddToSpellListScreen from "./screens/AddToSpellListScreen";
 import SpellListEditScreen from "./screens/SpellListEditScreen";
 import { useMemoOne } from "use-memo-one";
+import FloatingTabBar from "./components/FloatingTabBar";
+import MdIcon from "react-native-vector-icons/MaterialIcons";
+import McIcon from "react-native-vector-icons/MaterialCommunityIcons";
+import { StyleProvider } from "./data/StyleProvider";
 
 const Tab = createBottomTabNavigator();
 const Stack = createStackNavigator();
@@ -123,43 +127,59 @@ export default function App() {
     []
   );
 
+  const TabBar = ({ state, descriptors, navigation }) => {
+    return (
+      <FloatingTabBar
+        navigationState={state}
+        navigationDescriptors={descriptors}
+        navigation={navigation}
+        getIconForRouteName={(routeName, active) => {
+          switch (routeName) {
+            case "Sources":
+              return (
+                <McIcon
+                  name={"file-download"}
+                  size={30}
+                  color={
+                    active
+                      ? StyleProvider.styles.navbarItemFocussed.color
+                      : StyleProvider.styles.navbarItemUnfoccused.color
+                  }
+                />
+              );
+            case "SpellLists":
+              return (
+                <MdIcon
+                  name={"book"}
+                  size={30}
+                  color={
+                    active
+                      ? StyleProvider.styles.navbarItemFocussed.color
+                      : StyleProvider.styles.navbarItemUnfoccused.color
+                  }
+                />
+              );
+            case "Search":
+              return (
+                <McIcon
+                  name={"file-search"}
+                  size={30}
+                  color={
+                    active
+                      ? StyleProvider.styles.navbarItemFocussed.color
+                      : StyleProvider.styles.navbarItemUnfoccused.color
+                  }
+                />
+              );
+          }
+        }}
+      ></FloatingTabBar>
+    );
+  };
+
   const MainAppScreen = useCallback(
     () => (
-      <Tab.Navigator
-        screenOptions={({ route }) => ({
-          tabBarIcon: ({ focused, color, size }) => {
-            return (
-              <Text
-                style={[
-                  AppStyles.headerSubtext,
-                  styles.tabBarText,
-                  focused && styles.tabBarTextHighlight
-                ]}
-              >
-                {route.name === "Sources" && spellsLoading ? (
-                  <Spinner
-                    color={
-                      focused
-                        ? styles.tabBarTextHighlight.color
-                        : AppStyles.smallHeaderText.color
-                    }
-                    size={25}
-                    type={"Wave"}
-                  />
-                ) : (
-                  route.name
-                )}
-              </Text>
-            );
-          }
-        })}
-        tabBarOptions={{
-          showIcon: true,
-          showLabel: false,
-          style: { ...styles.tabBar }
-        }}
-        initialRouteName={"Sources"}
-      >
+      <Tab.Navigator tabBar={TabBar} initialRouteName={"Sources"}>
         <Tab.Screen name="Sources">{SourcesScreen}</Tab.Screen>
         <Tab.Screen name="SpellLists">{ListsScreen}</Tab.Screen>
         <Tab.Screen name="Search">{KnownScreen}</Tab.Screen>
