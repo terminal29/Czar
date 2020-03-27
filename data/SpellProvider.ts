@@ -212,51 +212,47 @@ export default class SpellProvider {
       duration: Toast.durations.SHORT,
       position: Toast.positions.BOTTOM
     });
-    try {
-      const providedUrls = await SpellProvider.getSourceURLs();
-      const allUrls = (
-        await Promise.all(
-          providedUrls.map(async url => await getIndexFiles(url.url))
-        )
-      ).flat(Infinity);
-      Toast.show(`Parsing spells...`, {
-        duration: Toast.durations.SHORT,
-        position: Toast.positions.BOTTOM
-      });
+    const providedUrls = await SpellProvider.getSourceURLs();
+    const allUrls = (
+      await Promise.all(
+        providedUrls.map(async url => await getIndexFiles(url.url))
+      )
+    ).flat(Infinity);
+    Toast.show(`Parsing spells...`, {
+      duration: Toast.durations.SHORT,
+      position: Toast.positions.BOTTOM
+    });
 
-      const allSpells = [];
-      for (const url of allUrls) {
-        if (url.xml["elements"]) {
-          for (let element of url.xml["elements"]["element"]) {
-            if (element["$"]["type"] == "Spell") {
-              const spell = parseSpell(element);
-              allSpells.push(spell);
-              await nextFrame();
-            }
+    const allSpells = [];
+    for (const url of allUrls) {
+      if (url.xml["elements"]) {
+        for (let element of url.xml["elements"]["element"]) {
+          if (element["$"]["type"] == "Spell") {
+            const spell = parseSpell(element);
+            allSpells.push(spell);
+            await nextFrame();
           }
         }
       }
-
-      const db = await SpellProvider.getDB();
-      Toast.show(`Saving spells...`, {
-        duration: Toast.durations.SHORT,
-        position: Toast.positions.BOTTOM
-      });
-
-      for (const spell of allSpells) {
-        await nextFrame();
-        await SpellProvider.insertSpell(db, spell);
-      }
-
-      await SpellProvider.updateSpellDataFromStorage();
-
-      Toast.show(`Loaded ${allSpells.length} spells`, {
-        duration: Toast.durations.SHORT,
-        position: Toast.positions.BOTTOM
-      });
-    } catch (e) {
-      Toast.show(e);
     }
+
+    const db = await SpellProvider.getDB();
+    Toast.show(`Saving spells...`, {
+      duration: Toast.durations.SHORT,
+      position: Toast.positions.BOTTOM
+    });
+
+    for (const spell of allSpells) {
+      await nextFrame();
+      await SpellProvider.insertSpell(db, spell);
+    }
+
+    await SpellProvider.updateSpellDataFromStorage();
+
+    Toast.show(`Loaded ${allSpells.length} spells`, {
+      duration: Toast.durations.SHORT,
+      position: Toast.positions.BOTTOM
+    });
   }
 
   private static notifyListeners() {

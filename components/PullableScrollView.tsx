@@ -45,10 +45,9 @@ interface PullableScrollViewProps {
   contentContainerStyle?: any;
   outerContainerStyle?: any;
   children?: ReactNode;
-  scrollTranslateY: Animated.Value<number>;
   threshold: number;
-  onPull: () => void;
-  willPull: () => void;
+  onPull?: () => void;
+  willPull?: () => void;
 }
 
 interface WithScrollParams {
@@ -156,11 +155,11 @@ const PullableScrollView = (props: PullableScrollViewProps) => {
     () => verticalPanGestureHandler(),
     []
   );
-  const translateY = new Animated.Value(0);
-  const isPulling = new Animated.Value(0);
-  const wasPulling = new Animated.Value(0);
-  const isSpringing = new Animated.Value(0);
-  const hasTriggeredWillPull = new Animated.Value(0);
+  const translateY = useMemoOne(() => new Animated.Value(0), []);
+  const isPulling = useMemoOne(() => new Animated.Value(0), []);
+  const wasPulling = useMemoOne(() => new Animated.Value(0), []);
+  const isSpringing = useMemoOne(() => new Animated.Value(0), []);
+  const hasTriggeredWillPull = useMemoOne(() => new Animated.Value(0), []);
   useCode(
     () =>
       block([
@@ -182,7 +181,10 @@ const PullableScrollView = (props: PullableScrollViewProps) => {
             eq(wasPulling, 1),
             eq(hasTriggeredWillPull, 0)
           ),
-          block([call([], props.willPull), set(hasTriggeredWillPull, 1)])
+          block([
+            call([], () => props.willPull?.()),
+            set(hasTriggeredWillPull, 1)
+          ])
         ),
         cond(
           and(
@@ -190,7 +192,10 @@ const PullableScrollView = (props: PullableScrollViewProps) => {
             eq(wasPulling, 1),
             eq(isPulling, 0)
           ),
-          block([call([], props.onPull), set(hasTriggeredWillPull, 0)])
+          block([
+            call([], () => props.onPull?.()),
+            set(hasTriggeredWillPull, 0)
+          ])
         ),
         set(wasPulling, isPulling)
       ]),

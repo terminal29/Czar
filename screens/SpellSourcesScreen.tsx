@@ -7,13 +7,16 @@ import {
   TextInput,
   KeyboardAvoidingView,
   Keyboard,
-  ScrollView,
-  TouchableOpacity
+  ScrollView
 } from "react-native";
+import { TouchableOpacity } from "react-native-gesture-handler";
 import { AppStyles } from "../styles/AppStyles";
 import SpellSourceItem from "../components/SpellSourceItem";
-import Icon from "react-native-vector-icons/Ionicons";
 import { useState } from "react";
+import { StyleProvider } from "../data/StyleProvider";
+import MdIcon from "react-native-vector-icons/MaterialIcons";
+import PullableScrollView from "../components/PullableScrollView";
+import Spinner from "react-native-spinkit";
 
 interface SpellSourcesScreenProps {
   spellSources: { id: number; url: string }[];
@@ -26,85 +29,81 @@ interface SpellSourcesScreenProps {
 
 const SpellSourcesScreen = (props: SpellSourcesScreenProps) => {
   const [addBoxText, setAddBoxText] = useState("");
+
   return (
-    <View style={[AppStyles.appBackground, styles.container]}>
-      <View style={[AppStyles.headerContainer]}>
-        <Text style={[AppStyles.headerText]}>Spell Sources</Text>
-        <Text style={[AppStyles.headerSubtext]}>Manage your spell sources</Text>
+    <View style={[styles.container, StyleProvider.styles.mainBackground]}>
+      <View style={[styles.pageTitleContainer]}>
+        <Text style={StyleProvider.styles.pageTitleText}>Spell Sources</Text>
       </View>
-      <View
-        style={[AppStyles.edgePadding, styles.container, styles.topPadding]}
-      >
-        <TouchableOpacity
-          onPress={() =>
-            props.onSpellSourcesReloaded && props.onSpellSourcesReloaded()
+      <View style={[styles.addBoxContainer]}>
+        <TextInput
+          style={[
+            StyleProvider.styles.listItemTextStrong,
+            styles.sourceTextInput
+          ]}
+          placeholder="Enter a URL..."
+          placeholderTextColor={
+            StyleProvider.styles.textInputPlaceholderText.color
           }
+          value={addBoxText}
+          onChangeText={value => !props.isLoading && setAddBoxText(value)}
+          editable={!props.isLoading}
+        />
+        <TouchableOpacity
+          onPress={() => props.onSpellSourceAdded?.(addBoxText)}
+          containerStyle={[styles.addSourceButton]}
           disabled={props.isLoading}
         >
-          <View
+          <MdIcon
+            name="add"
+            size={30}
             style={[
-              AppStyles.boxBackground,
-              AppStyles.boxRounded,
-              styles.reloadButton
+              !props.isLoading
+                ? StyleProvider.styles.listItemIconStrong
+                : StyleProvider.styles.listItemIconWeak
             ]}
-          >
-            {props.isLoading ? (
-              props.loadingButtonComponent
-            ) : (
-              <>
-                <Text style={AppStyles.smallHeaderSubtext}>
-                  Re-download Spell Data
-                </Text>
-              </>
-            )}
-          </View>
+          />
         </TouchableOpacity>
-
-        <ScrollView>
-          {props.spellSources.map(spellSource => (
-            <SpellSourceItem
-              key={spellSource.id}
-              sourceURL={spellSource.url}
-              style={styles.sourceItem}
-              onRemoveButtonPressed={url =>
-                props.onSpellSourceRemoved && props.onSpellSourceRemoved(url)
-              }
-              disabled={props.isLoading}
-            />
-          ))}
-          <View
-            style={[
-              AppStyles.boxRounded,
-              styles.boxBorder,
-              styles.addButtonContainer
-            ]}
-          >
-            <TextInput
-              multiline={true}
-              style={[AppStyles.headerSubtext, styles.sourceInput]}
-              onChangeText={text => setAddBoxText(text)}
-              value={addBoxText}
-            />
-            <TouchableOpacity
-              style={styles.sourceAddButton}
-              onPress={() =>
-                props.onSpellSourceAdded && props.onSpellSourceAdded(addBoxText)
-              }
-              disabled={props.isLoading}
-            >
-              <Icon
-                style={[
-                  AppStyles.headerSubtext,
-                  styles.sourceAddButtonPlus,
-                  props.isLoading && styles.sourceAddButtonPlusDisabled
-                ]}
-                name={"ios-add"}
-                size={40}
-              />
-            </TouchableOpacity>
-          </View>
-        </ScrollView>
       </View>
+      <PullableScrollView
+        threshold={50}
+        onPull={() => {
+          !props.isLoading && props.onSpellSourcesReloaded?.();
+        }}
+        contentContainerStyle={styles.sourcesContainer}
+      >
+        {props.spellSources.map((spellSource, index) => (
+          <SpellSourceItem
+            key={spellSource.id}
+            sourceURL={spellSource.url}
+            style={index == 0 && styles.extraTopBorder}
+            onRemoveButtonPressed={url =>
+              props.onSpellSourceRemoved && props.onSpellSourceRemoved(url)
+            }
+            disabled={props.isLoading}
+          />
+        ))}
+        {props.isLoading ? (
+          <View style={styles.ptrContainer}>
+            <Spinner
+              type={"FadingCircleAlt"}
+              size={30}
+              color={StyleProvider.styles.listItemTextWeak.color}
+            />
+          </View>
+        ) : (
+          <View style={styles.ptrContainer}>
+            <Text style={[StyleProvider.styles.listItemTextWeak]}>
+              Pull to Refresh
+            </Text>
+            <MdIcon
+              name="keyboard-arrow-down"
+              size={30}
+              style={[StyleProvider.styles.listItemTextWeak, styles.ptrIcon]}
+            />
+          </View>
+        )}
+      </PullableScrollView>
     </View>
   );
 };
@@ -115,38 +114,44 @@ const styles = StyleSheet.create({
   container: {
     flex: 1
   },
-  reloadButton: {
-    padding: 15,
-    alignItems: "center",
-    marginBottom: 20
-  },
-  boxBorder: {
-    borderColor: AppStyles.boxBackground.backgroundColor,
-    borderWidth: 2
-  },
-  addButtonContainer: {
-    flexDirection: "row",
-    marginBottom: 20
-  },
-  sourceInput: {
-    padding: 20,
-    flex: 1
-  },
-  sourceAddButton: {
-    flex: 0,
-    alignItems: "center",
+  pageTitleContainer: {
+    height: 93,
+    borderBottomColor: StyleProvider.styles.listItemDivider.borderColor,
+    borderBottomWidth: StyleProvider.styles.listItemDivider.borderWidth,
+    borderStyle: StyleProvider.styles.listItemDivider.borderStyle,
     justifyContent: "center",
-    paddingRight: 20
+    alignItems: "center"
   },
-  sourceAddButtonPlus: { fontSize: 40 },
-  sourceAddButtonPlusDisabled: { color: "#a0a0a0" },
-  sourceScroll: {
-    flex: 1
+  addBoxContainer: {
+    borderBottomColor: StyleProvider.styles.listItemDivider.borderColor,
+    borderBottomWidth: StyleProvider.styles.listItemDivider.borderWidth,
+    borderStyle: StyleProvider.styles.listItemDivider.borderStyle,
+    paddingVertical: StyleProvider.styles.edgePadding.padding - 10,
+    paddingLeft: StyleProvider.styles.edgePadding.padding,
+    flexDirection: "row"
   },
-  sourceItem: {
-    marginBottom: AppStyles.edgePadding.paddingHorizontal
+  extraTopBorder: {
+    borderTopColor: StyleProvider.styles.listItemDivider.borderColor,
+    borderTopWidth: StyleProvider.styles.listItemDivider.borderWidth,
+    borderStyle: StyleProvider.styles.listItemDivider.borderStyle
   },
-  topPadding: {
-    paddingTop: AppStyles.edgePadding.paddingHorizontal
+  sourceTextInput: { flex: 1 },
+  addSourceButton: {
+    flexBasis: 60,
+    justifyContent: "center",
+    alignItems: "center"
+  },
+  ptrContainer: {
+    justifyContent: "center",
+    alignItems: "center",
+    padding: StyleProvider.styles.edgePadding.padding
+  },
+  ptrIcon: {
+    fontSize: 30
+  },
+  sourcesContainer: {
+    padding: StyleProvider.styles.edgePadding.padding,
+    paddingTop: 0,
+    marginTop: -1
   }
 });

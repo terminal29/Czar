@@ -29,11 +29,9 @@ export default function App() {
   const [spellSources, setSpellSources] = useState([]);
   const [spellsLoading, setSpellsLoading] = useState(false);
 
-  useMemoOne(() => {
+  useEffect(() => {
     SpellProvider.getSpellIDs().then(ids =>
-      Promise.all(ids.map(id => SpellProvider.getSpellByID(id))).then(() =>
-        Toast.show("Loaded")
-      )
+      Promise.all(ids.map(id => SpellProvider.getSpellByID(id)))
     );
   }, []);
 
@@ -65,10 +63,14 @@ export default function App() {
         spellSources={spellSources}
         onSpellSourcesReloaded={() => {
           setSpellsLoading(true);
-          SpellProvider.downloadSpellsFromSources().then(() => {
-            updateSourceURLs();
-            setSpellsLoading(false);
-          });
+          SpellProvider.downloadSpellsFromSources()
+            .then(() => {
+              updateSourceURLs();
+              setSpellsLoading(false);
+            })
+            .catch(e => {
+              console.log(e);
+            });
         }}
         onSpellSourceAdded={sourceURL =>
           !spellsLoading &&
@@ -154,7 +156,7 @@ export default function App() {
           showLabel: false,
           style: { ...styles.tabBar }
         }}
-        initialRouteName={"SpellLists"}
+        initialRouteName={"Sources"}
       >
         <Tab.Screen name="Sources">{SourcesScreen}</Tab.Screen>
         <Tab.Screen name="SpellLists">{ListsScreen}</Tab.Screen>

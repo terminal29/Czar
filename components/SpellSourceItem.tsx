@@ -1,7 +1,8 @@
 import * as React from "react";
-import { Text, View, StyleSheet, TouchableOpacity } from "react-native";
-import { AppStyles } from "../styles/AppStyles";
-import Icon from "react-native-vector-icons/Ionicons";
+import { Text, View, StyleSheet } from "react-native";
+import { TouchableOpacity } from "react-native-gesture-handler";
+import { StyleProvider } from "../data/StyleProvider";
+import MdIcon from "react-native-vector-icons/MaterialIcons";
 
 interface SpellSourceItemProps {
   style?: any;
@@ -12,35 +13,29 @@ interface SpellSourceItemProps {
 
 const SpellSourceItem = (props: SpellSourceItemProps) => {
   return (
-    <View
-      style={[
-        AppStyles.boxBackground,
-        AppStyles.boxRounded,
-        styles.container,
-        props.style
-      ]}
-    >
-      <View style={styles.sourceURL}>
-        <Text style={[AppStyles.headerSubtext, { flex: 0 }]}>
-          {props.sourceURL}
-        </Text>
-      </View>
-      <TouchableOpacity
-        style={styles.sourceDeleteButton}
-        onPress={() =>
-          props.onRemoveButtonPressed &&
-          props.onRemoveButtonPressed(props.sourceURL)
-        }
-        disabled={props.disabled}
+    <View style={[styles.addBoxContainer, props.style]}>
+      <Text
+        style={[
+          props.disabled
+            ? StyleProvider.styles.listItemTextWeak
+            : StyleProvider.styles.listItemTextStrong,
+          styles.sourceTextInput
+        ]}
       >
-        <Icon
+        {props.sourceURL}
+      </Text>
+      <TouchableOpacity
+        onPress={() => props.onRemoveButtonPressed?.(props.sourceURL)}
+        containerStyle={[styles.addSourceButton]}
+      >
+        <MdIcon
+          name="close"
+          size={30}
           style={[
-            AppStyles.headerSubtext,
-            styles.sourceDeleteButtonX,
-            props.disabled && styles.sourceDeleteButtonXDisabled
+            props.disabled
+              ? StyleProvider.styles.listItemIconWeak
+              : StyleProvider.styles.listItemIconStrong
           ]}
-          name={"ios-close"}
-          size={40}
         />
       </TouchableOpacity>
     </View>
@@ -50,19 +45,26 @@ const SpellSourceItem = (props: SpellSourceItemProps) => {
 export default SpellSourceItem;
 
 const styles = StyleSheet.create({
-  container: {
+  addBoxContainer: {
+    borderBottomColor: StyleProvider.styles.listItemDivider.borderColor,
+    borderBottomWidth: StyleProvider.styles.listItemDivider.borderWidth,
+    borderStyle: StyleProvider.styles.listItemDivider.borderStyle,
+    paddingVertical: StyleProvider.styles.edgePadding.padding,
+    paddingLeft: StyleProvider.styles.edgePadding.padding,
     flexDirection: "row"
   },
-  sourceURL: {
-    flex: 1,
-    padding: 20
-  },
-  sourceDeleteButton: {
-    flex: 0,
-    alignItems: "center",
+  sourceTextInput: { flex: 1 },
+  addSourceButton: {
+    flexBasis: 60,
     justifyContent: "center",
-    paddingRight: 20
+    alignItems: "flex-end"
   },
-  sourceDeleteButtonX: { fontSize: 40 },
-  sourceDeleteButtonXDisabled: { color: "#a0a0a0" }
+  ptrContainer: {
+    justifyContent: "center",
+    alignItems: "center",
+    padding: StyleProvider.styles.edgePadding.padding
+  },
+  ptrIcon: {
+    fontSize: 30
+  }
 });
