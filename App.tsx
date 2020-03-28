@@ -25,6 +25,19 @@ import AddSpellToListModal from "./components/AddSpellToListModal";
 
 const Tab = createBottomTabNavigator();
 const Stack = createStackNavigator();
+
+const config = {
+  animation: "spring",
+  config: {
+    stiffness: 1000,
+    damping: 500,
+    mass: 3,
+    overshootClamping: true,
+    restDisplacementThreshold: 0.01,
+    restSpeedThreshold: 0.01
+  }
+};
+
 export default function App() {
   const [spellLists, setSpellLists] = useState<Array<SpellList>>([]);
   const [spellSources, setSpellSources] = useState([]);
@@ -32,11 +45,11 @@ export default function App() {
   const [addToListModalVisible, setAddToListModalVisible] = useState(false);
   const lastShownSpellID = useRef("");
 
-  useEffect(() => {
-    SpellProvider.getSpellIDs().then(ids =>
-      Promise.all(ids.map(id => SpellProvider.getSpellByID(id)))
-    );
-  }, []);
+  // useEffect(() => {
+  //   SpellProvider.getSpellIDs().then(ids =>
+  //     Promise.all(ids.map(id => SpellProvider.getSpellByID(id)))
+  //   );
+  // }, []);
 
   const updateSourceURLs = () =>
     SpellProvider.getSourceURLs().then(urls => setSpellSources(urls));
@@ -178,7 +191,7 @@ export default function App() {
 
   const MainAppScreen = () => (
     <>
-      <Tab.Navigator tabBar={TabBar} initialRouteName={"Sources"}>
+      <Tab.Navigator tabBar={TabBar} initialRouteName={"Search"}>
         <Tab.Screen name="Sources">{SourcesScreen}</Tab.Screen>
         <Tab.Screen name="SpellLists">{ListsScreen}</Tab.Screen>
         <Tab.Screen name="Search">{KnownScreen}</Tab.Screen>

@@ -31,6 +31,7 @@ const SpellSourcesScreen = (props: SpellSourcesScreenProps) => {
   const [addBoxText, setAddBoxText] = useState("");
   const [pasteWidthWorkaround, setPasteWidthWorkaround] = useState("99.9%");
   useEffect(() => {
+    ///https://github.com/facebook/react-native/issues/23653
     setTimeout(() => setPasteWidthWorkaround("100%"));
   }, []);
 

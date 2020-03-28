@@ -2,6 +2,7 @@ import * as React from "react";
 import { Text, View, StyleSheet } from "react-native";
 import { StyleProvider } from "../data/StyleProvider";
 import { TouchableOpacity } from "react-native-gesture-handler";
+import { useEffect } from "react";
 
 interface FloatingTabBarProps {
   navigationState: any;
@@ -11,7 +12,6 @@ interface FloatingTabBarProps {
 }
 
 const FloatingTabBar = (props: FloatingTabBarProps) => {
-  console.log(props.navigationState);
   return (
     <View style={styles.container}>
       <View style={styles.navOuterContainer}>

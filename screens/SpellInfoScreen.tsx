@@ -24,7 +24,7 @@ interface SpellInfoScreenProps {
 
 const SpellInfoScreen = (props: SpellInfoScreenProps) => {
   const [spellInfo, setSpellInfo] = useState<Spell>(null);
-  const [descriptionXML, setDescriptionXML] = useState(null);
+  const [descriptionElements, setDescriptionElements] = useState(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -33,6 +33,9 @@ const SpellInfoScreen = (props: SpellInfoScreenProps) => {
       const getSpell = async () => {
         const spellInfoPromise = await SpellProvider.getSpellByID(
           props.spellID
+        );
+        const spellDescription = DescriptionFormatter.FormatSpellDescription(
+          spellInfoPromise
         );
         if (!cancelled) {
           setSpellInfo(spellInfoPromise);
@@ -45,28 +48,6 @@ const SpellInfoScreen = (props: SpellInfoScreenProps) => {
       cancelled = true;
     };
   }, [loading]);
-
-  useEffect(() => {
-    let cancelled = false;
-
-    const doXML = async () => {
-      if (spellInfo) {
-        const descXML = await DescriptionFormatter.DescriptionString2XML(
-          spellInfo
-        );
-        if (!cancelled) {
-          setDescriptionXML(descXML["root"]);
-        }
-      } else {
-        setDescriptionXML(null);
-      }
-    };
-    doXML();
-
-    return () => {
-      cancelled = true;
-    };
-  }, [spellInfo]);
 
   const up = (text: string) => text.replace(/^\w/, c => c.toLocaleUpperCase());
 
@@ -153,24 +134,12 @@ const SpellInfoScreen = (props: SpellInfoScreenProps) => {
             >
               Description
             </Text>
-            <Text
-              style={[StyleProvider.styles.listItemTextWeak, styles.infoItem]}
-            >
-              {(() => {
-                if (descriptionXML) {
-                  const comps = DescriptionFormatter.DescriptionXML2ReactElements(
-                    descriptionXML,
-                    {
-                      extraStyles: [
-                        StyleProvider.styles.listItemTextWeak,
-                        styles.infoItem
-                      ]
-                    }
-                  );
-                  return comps;
-                }
-              })()}
-            </Text>
+            <View style={[styles.infoItem]}>
+              {spellInfo &&
+                DescriptionFormatter.FormatSpellDescription(spellInfo, {
+                  extraStyles: [StyleProvider.styles.listItemTextWeak]
+                })}
+            </View>
           </View>
         )}
         {props.extraButtons &&
