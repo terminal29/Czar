@@ -7,12 +7,16 @@ import DescriptionFormatter from "../data/DescriptionFormatter";
 import { Spell } from "../structs/Spell";
 import { StyleProvider } from "../data/StyleProvider";
 import MdIcon from "react-native-vector-icons/MaterialIcons";
+import McIcon from "react-native-vector-icons/MaterialCommunityIcons";
 import { TouchableOpacity } from "react-native-gesture-handler";
 import { useMemoOne, useCallbackOne } from "use-memo-one";
 
 interface ModSpellItemCompactProps {
   style?: any;
   spellID: SpellID;
+  removeEnabled?: boolean;
+  upEnabled?: boolean;
+  downEnabled?: boolean;
   onRemovePressed?: () => void;
   onUpPressed?: () => void;
   onDownPressed?: () => void;
@@ -44,8 +48,12 @@ const ModSpellItemCompact = (props: ModSpellItemCompactProps) => {
   const getCRString = () =>
     `${spellInfo.isConcentration ? "C" : ""}${spellInfo.isRitual ? "R" : ""}`;
 
-  const innerComponent = useCallbackOne(
-    () => (
+  const isUpEnabled = props.upEnabled ? props.upEnabled : true;
+  const isDownEnabled = props.downEnabled ? props.downEnabled : true;
+  const isRemoveEnabled = props.downEnabled ? props.downEnabled : true;
+
+  return (
+    <View style={[styles.container, props.style]}>
       <View style={styles.infoContainer}>
         <Text
           style={[
@@ -55,35 +63,53 @@ const ModSpellItemCompact = (props: ModSpellItemCompactProps) => {
         >
           {spellInfo ? spellInfo.name : props.spellID.id}
         </Text>
-        ) : (
-        <View style={styles.shortInfoContainer}>
-          <Text
-            style={[
-              StyleProvider.styles.listItemTextWeak,
-              styles.shortInfo,
-              styles.shortInfoFirst
-            ]}
-          >
-            Loading data...
-          </Text>
-        </View>
-        )}
       </View>
-    ),
-    [spellInfo]
-  );
-
-  return (
-    <View style={[styles.container, props.style]}>
-      <View style={styles.innerContainer}>
-        {innerComponent()}
-        <View style={styles.chevronContainer}>
+      <View style={styles.buttonsContainer}>
+        <TouchableOpacity
+          containerStyle={styles.buttonContainer}
+          disabled={!isUpEnabled}
+          onPress={() => props.onUpPressed?.()}
+        >
+          <McIcon
+            size={20}
+            name={"chevron-up"}
+            style={[
+              isUpEnabled
+                ? StyleProvider.styles.listItemIconStrong
+                : StyleProvider.styles.listItemIconWeak
+            ]}
+          />
+        </TouchableOpacity>
+        <TouchableOpacity
+          containerStyle={styles.buttonContainer}
+          disabled={!isDownEnabled}
+        >
+          <McIcon
+            size={20}
+            name={"chevron-down"}
+            style={[
+              isUpEnabled
+                ? StyleProvider.styles.listItemIconStrong
+                : StyleProvider.styles.listItemIconWeak
+            ]}
+            onPress={() => props.onDownPressed?.()}
+          />
+        </TouchableOpacity>
+        <TouchableOpacity
+          containerStyle={styles.buttonContainer}
+          disabled={!isRemoveEnabled}
+          onPress={() => props.onRemovePressed?.()}
+        >
           <MdIcon
             size={20}
-            name={"chevron-right"}
-            style={[StyleProvider.styles.listItemIconWeak]}
+            name={"close"}
+            style={[
+              isUpEnabled
+                ? StyleProvider.styles.listItemIconStrong
+                : StyleProvider.styles.listItemIconWeak
+            ]}
           />
-        </View>
+        </TouchableOpacity>
       </View>
     </View>
   );
@@ -94,25 +120,23 @@ export default ModSpellItemCompact;
 const styles = StyleSheet.create({
   container: {
     height: 65,
-    justifyContent: "center"
-  },
-  innerContainer: {
+    justifyContent: "center",
     flexDirection: "row"
   },
   spellTitleText: {},
   infoContainer: {
     flex: 1,
-    flexDirection: "column"
+    flexDirection: "column",
+    justifyContent: "center"
   },
-  shortInfoContainer: {
+  buttonsContainer: {
+    flex: 0,
     flexDirection: "row"
   },
-  shortInfo: {
-    flex: 1
-  },
-  shortInfoFirst: {},
-  chevronContainer: {
-    flex: 0,
+  buttonContainer: {
+    flex: 1,
+    flexBasis: 50,
+    flexDirection: "row",
     justifyContent: "center",
     alignItems: "center"
   }

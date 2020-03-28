@@ -244,7 +244,7 @@ export default function App() {
         extraButtons={[
           {
             text: "Go back",
-            iconName: "ios-arrow-back",
+            iconName: "keyboard-backspace",
             onPress: () => navigation.goBack()
           }
         ]}

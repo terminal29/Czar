@@ -15,6 +15,7 @@ import MdIcon from "react-native-vector-icons/MaterialIcons";
 import PullableScrollView from "../components/PullableScrollView";
 import Animated from "react-native-reanimated";
 import { useMemoOne } from "use-memo-one";
+import Spinner from "react-native-spinkit";
 
 interface SpellListScreenProps {
   list: SpellList;
@@ -69,25 +70,40 @@ const SpellListScreen = (props: SpellListScreenProps) => {
         </View>
       )}
       <PullableScrollView
-        contentContainerStyle={{ flex: 0 }}
+        contentContainerStyle={[styles.scrollContainer]}
         threshold={50}
         {...{ scrollTranslateY }}
         onPull={() => onPullDown()}
         willPull={() => {}}
       >
         {spellIDs.map(spellID => (
-          <SpellItemCompact spellID={spellID} onPress={props.onSpellPressed} />
-        ))}
-        <View style={styles.ptrContainer}>
-          <Text style={[StyleProvider.styles.listItemTextWeak]}>
-            Pull to Edit
-          </Text>
-          <MdIcon
-            name="keyboard-arrow-down"
-            size={30}
-            style={[StyleProvider.styles.listItemTextWeak, styles.ptrIcon]}
+          <SpellItemCompact
+            key={spellID.id}
+            spellID={spellID}
+            onPress={() => props.onSpellPressed(spellID)}
+            style={styles.spellItemInnerPadding}
           />
-        </View>
+        ))}
+        {loading ? (
+          <View style={styles.ptrContainer}>
+            <Spinner
+              type={"FadingCircleAlt"}
+              size={30}
+              color={StyleProvider.styles.listItemTextWeak.color}
+            />
+          </View>
+        ) : (
+          <View style={styles.ptrContainer}>
+            <Text style={[StyleProvider.styles.listItemTextWeak]}>
+              Pull to Edit
+            </Text>
+            <MdIcon
+              name="keyboard-arrow-down"
+              size={30}
+              style={[StyleProvider.styles.listItemTextWeak, styles.ptrIcon]}
+            />
+          </View>
+        )}
       </PullableScrollView>
     </View>
   );
@@ -123,5 +139,15 @@ const styles = StyleSheet.create({
   },
   ptrIcon: {
     fontSize: 30
+  },
+  scrollContainer: {
+    padding: StyleProvider.styles.edgePadding.padding,
+    paddingTop: 0
+  },
+  spellItemInnerPadding: {
+    padding: StyleProvider.styles.edgePadding.padding,
+    borderBottomColor: StyleProvider.styles.listItemDivider.borderColor,
+    borderBottomWidth: StyleProvider.styles.listItemDivider.borderWidth,
+    borderStyle: StyleProvider.styles.listItemDivider.borderStyle
   }
 });

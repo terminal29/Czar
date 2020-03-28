@@ -16,6 +16,7 @@ import PullableScrollView from "../components/PullableScrollView";
 import Animated from "react-native-reanimated";
 import { useMemoOne } from "use-memo-one";
 import ModSpellItemCompact from "../components/ModSpellItemCompact";
+import SpellProvider from "../data/SpellProvider";
 
 interface SpellListEditScreenProps {
   list: SpellList;
@@ -72,7 +73,7 @@ const SpellListEditScreen = (props: SpellListEditScreenProps) => {
         </View>
       )}
       <PullableScrollView
-        contentContainerStyle={{ flex: 0 }}
+        contentContainerStyle={styles.scrollContainer}
         threshold={50}
         {...{ scrollTranslateY }}
         onPull={onPullDown}
@@ -81,8 +82,19 @@ const SpellListEditScreen = (props: SpellListEditScreenProps) => {
         <View>
           {spellIDs.map(spellID => (
             <ModSpellItemCompact
+              style={styles.spellListItemBorder}
+              key={spellID.id}
               spellID={spellID}
-              onRemovePressed={() => {}}
+              onRemovePressed={async () => {
+                try {
+                  await SpellListProvider.removeSpellIDFromList(
+                    props.list,
+                    spellID
+                  );
+                } catch (e) {
+                  console.log(e);
+                }
+              }}
               onUpPressed={() => {}}
               onDownPressed={() => {}}
             />
@@ -134,5 +146,15 @@ const styles = StyleSheet.create({
   },
   ptrIcon: {
     fontSize: 30
+  },
+  scrollContainer: {
+    flex: 0,
+    paddingHorizontal: StyleProvider.styles.edgePadding.padding
+  },
+  spellListItemBorder: {
+    borderBottomColor: StyleProvider.styles.listItemDivider.borderColor,
+    borderBottomWidth: StyleProvider.styles.listItemDivider.borderWidth,
+    borderStyle: StyleProvider.styles.listItemDivider.borderStyle,
+    paddingLeft: StyleProvider.styles.edgePadding.padding
   }
 });
