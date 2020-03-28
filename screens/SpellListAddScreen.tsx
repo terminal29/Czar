@@ -51,9 +51,16 @@ const SpellListAddScreen = (props: SpellListAddScreenProps) => {
   const showPicker = () => {
     ImagePicker.showImagePicker(options, response => {
       if (response.error) {
-        Toast.show("Unable to load image");
+        Toast.show("Unable to load image", { duration: Toast.durations.LONG });
       } else if (response.data) {
-        setThumbnailURI(`data:image/jpeg;base64,${response.data}`);
+        if (response.data.length < 2000000) {
+          // < 2MB
+          setThumbnailURI(`data:image/jpeg;base64,${response.data}`);
+        } else {
+          Toast.show("Image too big (>2MB)", {
+            duration: Toast.durations.LONG
+          });
+        }
       }
     });
   };

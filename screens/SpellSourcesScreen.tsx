@@ -12,7 +12,7 @@ import {
 import { TouchableOpacity } from "react-native-gesture-handler";
 import { AppStyles } from "../styles/AppStyles";
 import SpellSourceItem from "../components/SpellSourceItem";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { StyleProvider } from "../data/StyleProvider";
 import MdIcon from "react-native-vector-icons/MaterialIcons";
 import PullableScrollView from "../components/PullableScrollView";
@@ -29,6 +29,10 @@ interface SpellSourcesScreenProps {
 
 const SpellSourcesScreen = (props: SpellSourcesScreenProps) => {
   const [addBoxText, setAddBoxText] = useState("");
+  const [pasteWidthWorkaround, setPasteWidthWorkaround] = useState("99.9%");
+  useEffect(() => {
+    setTimeout(() => setPasteWidthWorkaround("100%"));
+  }, []);
 
   return (
     <View style={[styles.container, StyleProvider.styles.mainBackground]}>
@@ -39,7 +43,8 @@ const SpellSourcesScreen = (props: SpellSourcesScreenProps) => {
         <TextInput
           style={[
             StyleProvider.styles.listItemTextStrong,
-            styles.sourceTextInput
+            styles.sourceTextInput,
+            { width: pasteWidthWorkaround }
           ]}
           placeholder="Enter a URL..."
           placeholderTextColor={
@@ -48,6 +53,7 @@ const SpellSourcesScreen = (props: SpellSourcesScreenProps) => {
           value={addBoxText}
           onChangeText={value => !props.isLoading && setAddBoxText(value)}
           editable={!props.isLoading}
+          selectTextOnFocus={true}
         />
         <TouchableOpacity
           onPress={() => props.onSpellSourceAdded?.(addBoxText)}
