@@ -17,6 +17,7 @@ import Animated from "react-native-reanimated";
 import { useMemoOne } from "use-memo-one";
 import ModSpellItemCompact from "../components/ModSpellItemCompact";
 import SpellProvider from "../data/SpellProvider";
+import Toast from "react-native-root-toast";
 
 interface SpellListEditScreenProps {
   list: SpellList;
@@ -30,6 +31,11 @@ const SpellListEditScreen = (props: SpellListEditScreenProps) => {
   const [spellIDs, setSpellIDs] = useState([]);
   const [loading, setLoading] = useState(true);
   const scrollTranslateY = useMemoOne(() => new Animated.Value(0), []);
+  const [isUpdating, setIsUpdating] = useState(false);
+
+  useEffect(() => {
+    setIsUpdating(false);
+  }, [spellIDs]);
 
   useEffect(() => {
     let cancelled = false;
@@ -85,18 +91,58 @@ const SpellListEditScreen = (props: SpellListEditScreenProps) => {
               style={styles.spellListItemBorder}
               key={spellID.id}
               spellID={spellID}
+              upEnabled={!isUpdating}
+              downEnabled={!isUpdating}
+              removeEnabled={!isUpdating}
               onRemovePressed={async () => {
-                try {
+                setIsUpdating(true);
+                await SpellListProvider.removeSpellIDFromList(
+                  props.list,
+                  spellID
+                );
+              }}
+              onUpPressed={async () => {
+                setIsUpdating(true);
+                const currentSpells = await SpellListProvider.getSpellListSpellIDs(
+                  props.list
+                );
+                const currentIndex = currentSpells.findIndex(
+                  id => id.id === spellID.id
+                );
+                if (currentIndex > 0) {
+                  const newIndex = currentIndex - 1;
                   await SpellListProvider.removeSpellIDFromList(
                     props.list,
                     spellID
                   );
-                } catch (e) {
-                  console.log(e);
+                  await SpellListProvider.addSpellIDtoListAtIndex(
+                    props.list,
+                    spellID,
+                    newIndex
+                  );
                 }
               }}
-              onUpPressed={() => {}}
-              onDownPressed={() => {}}
+              onDownPressed={async () => {
+                setIsUpdating(true);
+                const currentSpells = await SpellListProvider.getSpellListSpellIDs(
+                  props.list
+                );
+                const currentIndex = currentSpells.findIndex(
+                  id => id.id === spellID.id
+                );
+                if (currentIndex < currentSpells.length) {
+                  const newIndex = currentIndex + 1;
+                  await SpellListProvider.removeSpellIDFromList(
+                    props.list,
+                    spellID
+                  );
+                  await SpellListProvider.addSpellIDtoListAtIndex(
+                    props.list,
+                    spellID,
+                    newIndex
+                  );
+                }
+              }}
             />
           ))}
         </View>

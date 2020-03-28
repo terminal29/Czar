@@ -48,9 +48,12 @@ const ModSpellItemCompact = (props: ModSpellItemCompactProps) => {
   const getCRString = () =>
     `${spellInfo.isConcentration ? "C" : ""}${spellInfo.isRitual ? "R" : ""}`;
 
-  const isUpEnabled = props.upEnabled ? props.upEnabled : true;
-  const isDownEnabled = props.downEnabled ? props.downEnabled : true;
-  const isRemoveEnabled = props.downEnabled ? props.downEnabled : true;
+  const isUpEnabled = () =>
+    props.upEnabled !== undefined ? props.upEnabled : true;
+  const isDownEnabled = () =>
+    props.downEnabled !== undefined ? props.downEnabled : true;
+  const isRemoveEnabled = () =>
+    props.removeEnabled !== undefined ? props.removeEnabled : true;
 
   return (
     <View style={[styles.container, props.style]}>
@@ -67,14 +70,14 @@ const ModSpellItemCompact = (props: ModSpellItemCompactProps) => {
       <View style={styles.buttonsContainer}>
         <TouchableOpacity
           containerStyle={styles.buttonContainer}
-          disabled={!isUpEnabled}
+          disabled={!isUpEnabled()}
           onPress={() => props.onUpPressed?.()}
         >
           <McIcon
             size={20}
             name={"chevron-up"}
             style={[
-              isUpEnabled
+              isUpEnabled()
                 ? StyleProvider.styles.listItemIconStrong
                 : StyleProvider.styles.listItemIconWeak
             ]}
@@ -82,13 +85,13 @@ const ModSpellItemCompact = (props: ModSpellItemCompactProps) => {
         </TouchableOpacity>
         <TouchableOpacity
           containerStyle={styles.buttonContainer}
-          disabled={!isDownEnabled}
+          disabled={!isDownEnabled()}
         >
           <McIcon
             size={20}
             name={"chevron-down"}
             style={[
-              isUpEnabled
+              isDownEnabled()
                 ? StyleProvider.styles.listItemIconStrong
                 : StyleProvider.styles.listItemIconWeak
             ]}
@@ -97,14 +100,14 @@ const ModSpellItemCompact = (props: ModSpellItemCompactProps) => {
         </TouchableOpacity>
         <TouchableOpacity
           containerStyle={styles.buttonContainer}
-          disabled={!isRemoveEnabled}
+          disabled={!isRemoveEnabled()}
           onPress={() => props.onRemovePressed?.()}
         >
           <MdIcon
             size={20}
             name={"close"}
             style={[
-              isUpEnabled
+              isRemoveEnabled()
                 ? StyleProvider.styles.listItemIconStrong
                 : StyleProvider.styles.listItemIconWeak
             ]}

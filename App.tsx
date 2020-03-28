@@ -273,12 +273,12 @@ export default function App() {
         existingList={route.params.list}
         onDone={async newList => {
           // submit new list to lists
-          await SpellListProvider.removeSpellList(route.params.list);
+          await SpellListProvider.removeSpellList(route.params.list, false);
           await SpellListProvider.addSpellList(newList);
           navigation.goBack();
         }}
         onDelete={() => {
-          SpellListProvider.removeSpellList(route.params.list);
+          SpellListProvider.removeSpellList(route.params.list, true);
           navigation.goBack();
         }}
         onCancel={() => {
@@ -316,7 +316,7 @@ export default function App() {
           list={route.params.list}
           onAddDivider={() => Toast.show("Not implemented yet :)")}
           onConfirmed={async newList => {
-            await SpellListProvider.removeSpellList(route.params.list);
+            await SpellListProvider.removeSpellList(route.params.list, false);
             await SpellListProvider.addSpellList(newList);
             navigation.goBack();
           }}

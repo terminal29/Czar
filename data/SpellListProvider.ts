@@ -105,12 +105,14 @@ export default class SpellListProvider {
     allSpells.splice(index, 0, id);
     await this.clearSpellListSpellIDs(list);
     await this.addMultipleSpellsToList(list, allSpells);
+    this.notifySingleListListeners(list.id);
   }
 
   private static async clearSpellListSpellIDs(list: SpellList) {
     await (await this.getDB()).executeSql(
       `DELETE FROM ${SpellListProvider.spellListSpellIDsTableName} WHERE id='${list.id}'`
     );
+    this.notifySingleListListeners(list.id);
   }
 
   private static async addMultipleSpellsToList(
@@ -128,6 +130,7 @@ export default class SpellListProvider {
       );
     });
     await Promise.all(promises);
+    this.notifySingleListListeners(list.id);
   }
 
   public static async removeSpellIDFromList(list: SpellList, id: SpellID) {
@@ -137,6 +140,7 @@ export default class SpellListProvider {
 
     // Get all spells after removal
     const allSpells = await this.getSpellListSpellIDs(list);
+    console.log(allSpells);
     //Clear list
     await this.clearSpellListSpellIDs(list);
     // Add spells back (already ordered properly)
@@ -171,15 +175,20 @@ export default class SpellListProvider {
     this.notifyListsListeners();
   }
 
-  public static async removeSpellList(list: SpellList) {
+  public static async removeSpellList(
+    list: SpellList,
+    clearSpells: boolean = true
+  ) {
     // Delete list
     await (await this.getDB()).executeSql(
       `DELETE FROM ${SpellListProvider.spellListTableName} WHERE id='${list.id}'`
     );
-    // Delete list ids
-    await (await this.getDB()).executeSql(
-      `DELETE FROM ${SpellListProvider.spellListSpellIDsTableName} WHERE id='${list.id}'`
-    );
+    if (clearSpells) {
+      // Delete list ids
+      await (await this.getDB()).executeSql(
+        `DELETE FROM ${SpellListProvider.spellListSpellIDsTableName} WHERE id='${list.id}'`
+      );
+    }
     console.log(`Removed spell list ${list.name}`);
     this.notifyListsListeners();
   }
