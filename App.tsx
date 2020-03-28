@@ -21,6 +21,7 @@ import MdIcon from "react-native-vector-icons/MaterialIcons";
 import McIcon from "react-native-vector-icons/MaterialCommunityIcons";
 import { StyleProvider } from "./data/StyleProvider";
 import Modal from "react-native-modal";
+import AddSpellToListModal from "./components/AddSpellToListModal";
 
 const Tab = createBottomTabNavigator();
 const Stack = createStackNavigator();
@@ -175,57 +176,41 @@ export default function App() {
     );
   };
 
-  const MainAppScreen = useCallback(
-    () => (
-      <>
-        <Tab.Navigator tabBar={TabBar} initialRouteName={"Sources"}>
-          <Tab.Screen name="Sources">{SourcesScreen}</Tab.Screen>
-          <Tab.Screen name="SpellLists">{ListsScreen}</Tab.Screen>
-          <Tab.Screen name="Search">{KnownScreen}</Tab.Screen>
-        </Tab.Navigator>
-        <Modal isVisible={addToListModalVisible}>
-          <View
-            style={{
-              flex: 1,
-              backgroundColor:
-                StyleProvider.styles.mainBackground.backgroundColor
-            }}
-          >
-            <Text style={[StyleProvider.styles.listItemTextStrong]}>
-              Choose a list to add this spell to {spellLists.length}
-            </Text>
-            {spellLists.map(list => (
-              <Button
-                key={list.id}
-                title={list.name}
-                onPress={async () => {
-                  setAddToListModalVisible(false);
-                  try {
-                    await SpellListProvider.addSpellIDToList(
-                      list,
-                      new SpellID(lastShownSpellID.current)
-                    );
-                    Toast.show("Success!", {
-                      duration: Toast.durations.LONG
-                    });
-                  } catch {
-                    Toast.show("This spell is already on that list!", {
-                      duration: Toast.durations.LONG
-                    });
-                  }
-                }}
-              />
-            ))}
-            <Button
-              key={"cancel"}
-              title={"Cancel"}
-              onPress={() => setAddToListModalVisible(false)}
-            ></Button>
-          </View>
-        </Modal>
-      </>
-    ),
-    [SourcesScreen, ListsScreen, KnownScreen, spellsLoading]
+  const MainAppScreen = () => (
+    <>
+      <Tab.Navigator tabBar={TabBar} initialRouteName={"Sources"}>
+        <Tab.Screen name="Sources">{SourcesScreen}</Tab.Screen>
+        <Tab.Screen name="SpellLists">{ListsScreen}</Tab.Screen>
+        <Tab.Screen name="Search">{KnownScreen}</Tab.Screen>
+      </Tab.Navigator>
+      <Modal
+        isVisible={addToListModalVisible}
+        onBackButtonPress={() => setAddToListModalVisible(false)}
+        useNativeDriver={true}
+        animationIn={"slideInUp"}
+        animationOut={"slideOutDown"}
+        style={{ flex: 1, justifyContent: "flex-end" }}
+      >
+        <AddSpellToListModal
+          spellID={new SpellID(lastShownSpellID.current)}
+          lists={spellLists}
+          onBackPressed={() => setAddToListModalVisible(false)}
+          onSpellListPressed={async (spellID, spellList) => {
+            setAddToListModalVisible(false);
+            try {
+              await SpellListProvider.addSpellIDToList(spellList, spellID);
+              Toast.show("Added spell to list", {
+                duration: Toast.durations.LONG
+              });
+            } catch (e) {
+              Toast.show("This spell is already on that list", {
+                duration: Toast.durations.LONG
+              });
+            }
+          }}
+        />
+      </Modal>
+    </>
   );
 
   const SpellPopupScreen = useCallback(

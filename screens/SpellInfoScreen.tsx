@@ -87,6 +87,7 @@ const SpellInfoScreen = (props: SpellInfoScreenProps) => {
 
   const makeButton = (text, iconName, onPress?) => (
     <TouchableOpacity
+      key={text}
       style={styles.addSpellListButtonContainer}
       onPress={() => onPress?.()}
     >
