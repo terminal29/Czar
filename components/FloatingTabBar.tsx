@@ -20,6 +20,7 @@ const FloatingTabBar = (props: FloatingTabBarProps) => {
             <TouchableOpacity
               containerStyle={styles.buttonTouchArea}
               onPress={() => props.navigation.navigate(routeName)}
+              disabled={props.navigationState.index === index}
             >
               {props.getIconForRouteName(
                 routeName,
