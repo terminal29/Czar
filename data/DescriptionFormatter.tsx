@@ -16,56 +16,188 @@ function DescriptionXML2ReactElements(
   let descriptionDOM = parser.parseFromString(xmlString, "text/xml");
   console.log(descriptionDOM);
 
-  const processNode = node => {
-    if (node.hasChildNodes()) {
-      const childNodeValues = [];
-      for (let i = 0; i < node.childNodes.length; i++) {
-        const nodeResult = processNode(node.childNodes[i]);
-        const extraElements = [];
-        const extraStyles = [];
-        if (nodeResult) {
-          if (node.parentNode?.tagName === "ul" && node.tagName === "li") {
-            extraElements.push(
-              <Text
-                key={uuid()}
-                style={[
-                  StyleProvider.styles.listItemTextWeak,
-                  { marginTop: 5 }
-                ]}
-              >
-                •
-              </Text>
-            );
-            extraStyles.push({ flexDirection: "row" });
-          }
-        }
-        childNodeValues.push(
-          <View key={uuid()} style={extraStyles}>
-            {extraElements}
-            <View key={uuid()}>{nodeResult}</View>
-          </View>
-        );
-      }
-      return childNodeValues;
-    } else {
+  // const processRawTextData = node => {
+  //   // Pure text node
+  //   if (node.data) {
+  //     if (node.data.trim().length > 0) {
+  //       if (node.tagName === "xml") return;
+  //       return (
+  //         <Text key={uuid()} style={[StyleProvider.styles.listItemTextWeak]}>
+  //           {node.data}
+  //         </Text>
+  //       );
+  //     }
+  //   }
+  //   return null;
+  // };
+
+  // const processNode = node => {
+  //   if (node.hasChildNodes()) {
+  //     let childNodes = [];
+  //     for (let i = 0; i < node.childNodes.length; i++) {
+  //       if (node.childNodes[i].data) {
+  //         if (node.childNodes[i].data.trim().length > 0) {
+  //           childNodes.push(node.childNodes[i]);
+  //         }
+  //       } else {
+  //         childNodes.push(node.childNodes[i]);
+  //       }
+  //     }
+
+  //     const childNodeResults = childNodes.map(childNode =>
+  //       processNode(childNode)
+  //     );
+
+  //     let indent = false;
+
+  //     for (let j = 0; j < node.attributes?.length; j++) {
+  //       if (node.attributes[j].name === "class") {
+  //         if (node.attributes[j].value === "indent") {
+  //           indent = true;
+  //         }
+  //       }
+  //     }
+
+  //     if (node.tagName == "p") {
+  //       // Text container
+  //       const textData = processRawTextData(node);
+  //       if (indent) {
+  //         return (
+  //           <View key={uuid()}>
+  //             {childNodeResults}
+  //             {textData}
+  //           </View>
+  //         );
+  //       } else {
+  //         return (
+  //           <View key={uuid()}>
+  //             {textData}
+  //             {childNodeResults}
+  //           </View>
+  //         );
+  //       }
+  //     } else if (node.tagName === "li") {
+  //       return (
+  //         <View key={uuid()} style={{ flexDirection: "row" }}>
+  //           <Text
+  //             key={uuid()}
+  //             style={[
+  //               StyleProvider.styles.listItemTextWeak,
+  //               { marginTop: 5, marginRight: 5 }
+  //             ]}
+  //           >
+  //             •
+  //           </Text>
+  //           {childNodeResults}
+  //         </View>
+  //       );
+  //     } else {
+  //       return <View key={uuid()}>{childNodeResults}</View>;
+  //     }
+  //   } else {
+  //     return processRawTextData(node);
+  //   }
+  // };
+
+  const processRawTextData = node => {
+    // Pure text node
+    if (node.data) {
       if (node.data.trim().length > 0) {
         if (node.tagName === "xml") return;
-        return (
-          <Text
-            style={[StyleProvider.styles.listItemTextWeak, { marginTop: 5 }]}
-          >
-            {node.data}
-          </Text>
-        );
+        return { textData: node.data.trim() };
       }
+    }
+    return null;
+  };
+
+  const processNode = node => {
+    if (node.hasChildNodes()) {
+      let childNodes = [];
+      for (let i = 0; i < node.childNodes.length; i++) {
+        if (node.childNodes[i].data) {
+          if (node.childNodes[i].data.trim().length > 0) {
+            childNodes.push(node.childNodes[i]);
+          }
+        } else {
+          childNodes.push(node.childNodes[i]);
+        }
+      }
+
+      const childNodeResults = childNodes.map(childNode =>
+        processNode(childNode)
+      );
+
+      let indent = false;
+
+      for (let j = 0; j < node.attributes?.length; j++) {
+        if (node.attributes[j].name === "class") {
+          if (node.attributes[j].value === "indent") {
+            indent = true;
+          }
+        }
+      }
+
+      if (node.tagName == "p") {
+        // Text container
+        const textData = processRawTextData(node);
+        if (indent) {
+          return { children: childNodeResults, textData, indent };
+        } else {
+          return { children: childNodeResults, textData, indent };
+        }
+      } else if (node.tagName === "ul") {
+        return { children: childNodeResults, rowDirection: true };
+      } else if (node.tagName === "li") {
+        return { children: childNodeResults, bullet: true };
+      } else if (node.tagName === "strong") {
+        return { children: childNodeResults, bold: true };
+      } else {
+        return { children: childNodeResults };
+      }
+    } else {
+      return processRawTextData(node);
     }
   };
 
-  const elements = [processNode(descriptionDOM)].flat(Infinity);
+  const elements = processNode(descriptionDOM);
 
-  console.log(elements);
+  const nodeToElements = nodeList => {
+    if (!nodeList) {
+      return;
+    }
+    let nodeChildrenResults = [];
+    if (nodeList.children)
+      nodeChildrenResults = nodeList.children
+        .filter(child => !!child)
+        .map(child => nodeToElements(child));
 
-  return elements;
+    const textData = nodeList.textData;
+    if (nodeList.indent) {
+      nodeChildrenResults = [
+        nodeChildrenResults[nodeChildrenResults.length - 1],
+        nodeChildrenResults.slice(0, nodeChildrenResults.length - 1)
+      ];
+    }
+    const textStyles = [
+      StyleProvider.styles.listItemTextWeak,
+      { marginTop: 5 }
+    ];
+    return (
+      <View style={{ flexDirection: nodeList.bullet ? "row" : "column" }}>
+        {nodeList.bullet && (
+          <View>
+            <Text style={textStyles}>-</Text>
+          </View>
+        )}
+        <View>{nodeChildrenResults}</View>
+        {textData && <Text style={textStyles}>{textData}</Text>}
+      </View>
+    );
+  };
+
+  console.log(JSON.stringify(elements, null, 3));
+
+  return nodeToElements(elements);
   // if (object["_"]) {
   //   // has text
   //   if (object["$"]) {
