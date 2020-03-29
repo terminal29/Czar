@@ -54,7 +54,7 @@ const SpellListScreen = (props: SpellListScreenProps) => {
         <ImageBackground
           style={[styles.pageTitleContainer]}
           source={{ uri: props.list.thumbnailURI }}
-          resizeMode="stretch"
+          resizeMode="cover"
         >
           <View style={styles.darkTitleBackgroundOverlay} />
           <Text style={StyleProvider.styles.pageTitleText}>

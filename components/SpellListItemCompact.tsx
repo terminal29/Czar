@@ -60,7 +60,7 @@ const styles = StyleSheet.create({
   cardImage: {
     width: "100%",
     height: 150,
-    resizeMode: "stretch"
+    resizeMode: "cover"
   },
   cardTitle: {
     flex: 1,

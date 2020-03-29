@@ -91,7 +91,7 @@ const SpellInfoScreen = (props: SpellInfoScreenProps) => {
   );
 
   const makeFeature = (title: string, value: string) => (
-    <View style={styles.featureItem}>
+    <View style={styles.featureItem} key={title}>
       <Text style={[StyleProvider.styles.listItemTextWeak, styles.featureText]}>
         {title}
       </Text>

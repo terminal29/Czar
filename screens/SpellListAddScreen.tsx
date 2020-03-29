@@ -53,14 +53,8 @@ const SpellListAddScreen = (props: SpellListAddScreenProps) => {
       if (response.error) {
         Toast.show("Unable to load image", { duration: Toast.durations.LONG });
       } else if (response.data) {
-        if (response.data.length < 2000000) {
-          // < 2MB
-          setThumbnailURI(`data:image/jpeg;base64,${response.data}`);
-        } else {
-          Toast.show("Image too big (>2MB)", {
-            duration: Toast.durations.LONG
-          });
-        }
+        console.log(response.uri);
+        setThumbnailURI(response.uri);
       }
     });
   };
@@ -175,7 +169,7 @@ const styles = StyleSheet.create({
   cardImage: {
     width: "100%",
     height: 150,
-    resizeMode: "stretch"
+    resizeMode: "cover"
   },
   cardTitle: {
     flex: 1,
