@@ -51,8 +51,17 @@ const SpellInfoScreen = (props: SpellInfoScreenProps) => {
 
   const up = (text: string) => text.replace(/^\w/, c => c.toLocaleUpperCase());
 
-  const num2pos = num =>
-    num == "1" ? "1st" : "2" ? "2nd" : "3" ? "3rd" : `${num}th`;
+  const num2pos = num => {
+    switch (num) {
+      case "1":
+        return "1st";
+      case "2":
+        return "2nd";
+      case "3":
+        return "3rd";
+    }
+    return `${num}th`;
+  };
 
   const getSpellLevelAndType = () =>
     spellInfo.level === "0"

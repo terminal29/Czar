@@ -27,6 +27,7 @@ function DescriptionXML2ReactElements(
           if (node.parentNode?.tagName === "ul" && node.tagName === "li") {
             extraElements.push(
               <Text
+                key={uuid()}
                 style={[
                   StyleProvider.styles.listItemTextWeak,
                   { marginTop: 5 }
@@ -39,9 +40,9 @@ function DescriptionXML2ReactElements(
           }
         }
         childNodeValues.push(
-          <View style={extraStyles}>
+          <View key={uuid()} style={extraStyles}>
             {extraElements}
-            <View>{nodeResult}</View>
+            <View key={uuid()}>{nodeResult}</View>
           </View>
         );
       }
