@@ -191,7 +191,7 @@ export default function App() {
 
   const MainAppScreen = () => (
     <>
-      <Tab.Navigator tabBar={TabBar} initialRouteName={"Search"}>
+      <Tab.Navigator tabBar={TabBar} initialRouteName={"Sources"}>
         <Tab.Screen name="Sources">{SourcesScreen}</Tab.Screen>
         <Tab.Screen name="SpellLists">{ListsScreen}</Tab.Screen>
         <Tab.Screen name="Search">{KnownScreen}</Tab.Screen>

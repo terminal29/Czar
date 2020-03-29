@@ -29,10 +29,10 @@ interface SpellSourcesScreenProps {
 
 const SpellSourcesScreen = (props: SpellSourcesScreenProps) => {
   const [addBoxText, setAddBoxText] = useState("");
-  const [pasteWidthWorkaround, setPasteWidthWorkaround] = useState("99.9%");
+  const [editable, setEditable] = useState(false);
   useEffect(() => {
     ///https://github.com/facebook/react-native/issues/23653
-    setTimeout(() => setPasteWidthWorkaround("100%"));
+    setTimeout(() => setEditable(true));
   }, []);
 
   return (
@@ -44,20 +44,24 @@ const SpellSourcesScreen = (props: SpellSourcesScreenProps) => {
         <TextInput
           style={[
             StyleProvider.styles.listItemTextStrong,
-            styles.sourceTextInput,
-            { width: pasteWidthWorkaround }
+            styles.sourceTextInput
           ]}
           placeholder="Enter a URL..."
           placeholderTextColor={
             StyleProvider.styles.textInputPlaceholderText.color
           }
           value={addBoxText}
-          onChangeText={value => !props.isLoading && setAddBoxText(value)}
-          editable={!props.isLoading}
+          onChangeText={value => {
+            !props.isLoading && setAddBoxText(value);
+          }}
+          editable={!props.isLoading && editable}
           selectTextOnFocus={true}
         />
         <TouchableOpacity
-          onPress={() => props.onSpellSourceAdded?.(addBoxText)}
+          onPress={() => {
+            props.onSpellSourceAdded?.(addBoxText);
+            setAddBoxText("");
+          }}
           containerStyle={[styles.addSourceButton]}
           disabled={props.isLoading}
         >

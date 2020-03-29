@@ -168,8 +168,11 @@ export default class SpellProvider {
           if (xml["index"]) {
             for (let fileList of xml["index"]["files"]) {
               for (let file of fileList["file"]) {
-                await nextFrame();
-                urls.push(await getIndexFiles(file["$"]["url"], toCancel));
+                const url: string = file["$"]["url"];
+                if (url.endsWith("spells.xml") || url.endsWith(".index")) {
+                  await nextFrame();
+                  urls.push(await getIndexFiles(file["$"]["url"], toCancel));
+                }
               }
             }
           }
@@ -178,38 +181,45 @@ export default class SpellProvider {
     };
 
     const builder = new xml2js.Builder();
-    const parseSpell = spellXML => {
+    const parseSpell = (spellXML): Spell | null => {
       const spell = new Spell();
-      spell.name = spellXML["$"]["name"];
-      spell.id = spellXML["$"]["id"];
-      spell.source = spellXML["$"]["source"];
+      try {
+        spell.name = spellXML["$"]["name"];
+        spell.id = spellXML["$"]["id"];
+        spell.source = spellXML["$"]["source"];
 
-      spell.formattedText = builder.buildObject(spellXML["description"]);
+        spell.formattedText = builder.buildObject(spellXML["description"]);
 
-      spell.classes = spellXML["supports"][0].split(",").map(str => str.trim());
+        spell.classes = spellXML["supports"][0]
+          .split(",")
+          .map(str => str.trim());
 
-      const getSetValue = name =>
-        spellXML["setters"][0]["set"].find(set => set["$"]["name"] == name)[
-          "_"
-        ] || "";
+        const getSetValue = name =>
+          spellXML["setters"][0]["set"].find(set => set["$"]["name"] == name)?.[
+            "_"
+          ] || "";
 
-      spell.keywords = getSetValue("keywords")
-        .split(",")
-        .map(str => str.trim());
-      spell.level = getSetValue("level");
-      spell.school = getSetValue("school");
-      spell.time = getSetValue("time");
-      spell.duration = getSetValue("duration");
-      spell.range = getSetValue("range");
-      spell.hasVerbalComponent = getSetValue("hasVerbalComponent") === "true";
-      spell.hasSomaticComponent = getSetValue("hasSomaticComponent") === "true";
-      spell.hasMaterialComponent =
-        getSetValue("hasMaterialComponent") === "true";
-      spell.materialComponents = getSetValue("materialComponent");
-      spell.isConcentration = getSetValue("isConcentration") === "true";
-      spell.isRitual = getSetValue("isRitual") == "true";
-
-      return spell;
+        spell.keywords = getSetValue("keywords")
+          .split(",")
+          .map(str => str.trim());
+        spell.level = getSetValue("level");
+        spell.school = getSetValue("school");
+        spell.time = getSetValue("time");
+        spell.duration = getSetValue("duration");
+        spell.range = getSetValue("range");
+        spell.hasVerbalComponent = getSetValue("hasVerbalComponent") === "true";
+        spell.hasSomaticComponent =
+          getSetValue("hasSomaticComponent") === "true";
+        spell.hasMaterialComponent =
+          getSetValue("hasMaterialComponent") === "true";
+        spell.materialComponents = getSetValue("materialComponent");
+        spell.isConcentration = getSetValue("isConcentration") === "true";
+        spell.isRitual = getSetValue("isRitual") == "true";
+        return spell;
+      } catch (e) {
+        console.log("Parse failed for spell");
+        console.log(spellXML);
+      }
     };
 
     Toast.show("Gathering source files...", {
@@ -239,7 +249,7 @@ export default class SpellProvider {
         for (let element of url.xml["elements"]["element"]) {
           if (element["$"]["type"] == "Spell") {
             const spell = parseSpell(element);
-            allSpells.push(spell);
+            if (spell) allSpells.push(spell);
             await nextFrame();
           }
         }
