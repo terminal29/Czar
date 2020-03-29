@@ -108,12 +108,14 @@ const SpellsKnownScreen = (props: SpellsKnownScreenProps) => {
     }
     onSearchFiltersSettled.current = setTimeout(() => {
       onUpdatingSearchResults.current = makeCancelable(getNewSpellIDs());
-      onUpdatingSearchResults.current.promise.then(spellIDs => {
-        filteredSpellIDs.current = spellIDs;
-        maxFilteredSpells.current = spellIDs.length;
-        setDataProvider(dataProvider.cloneWithRows(filteredSpellIDs.current));
-        console.log("Updated spell list");
-      });
+      onUpdatingSearchResults.current.promise
+        .then(spellIDs => {
+          filteredSpellIDs.current = spellIDs;
+          maxFilteredSpells.current = spellIDs.length;
+          setDataProvider(dataProvider.cloneWithRows(filteredSpellIDs.current));
+          console.log("Updated spell list");
+        })
+        .catch(e => {});
     }, 500);
     return () => {
       if (onSearchFiltersSettled.current)

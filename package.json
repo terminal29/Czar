@@ -5,7 +5,8 @@
     "web": "expo start --web",
     "start": "react-native start",
     "test": "jest",
-    "cleanbuild-android": "cd android && gradlew.bat clean && cd .. && react-native run-android"
+    "cleanbuild-android": "cd android && gradlew.bat clean && cd .. && react-native run-android",
+    "bundle": "react-native bundle --dev false --platform android --entry-file index.js --bundle-output ./android/app/src/main/assets/index.android.bundle --assets-dest ./android/app/src/main/res && cd android && gradlew.bat assembleDebug"
   },
   "dependencies": {
     "@react-native-community/async-storage": "^1.8.1",

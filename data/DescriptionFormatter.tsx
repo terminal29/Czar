@@ -4,6 +4,7 @@ import { Spell } from "../structs/Spell";
 import * as xml2js from "react-native-xml2js";
 import { DOMParser } from "xmldom";
 import { v4 as uuid } from "react-native-uuid";
+import { StyleProvider } from "./StyleProvider";
 
 const parser = new DOMParser();
 
@@ -20,15 +21,41 @@ function DescriptionXML2ReactElements(
       const childNodeValues = [];
       for (let i = 0; i < node.childNodes.length; i++) {
         const nodeResult = processNode(node.childNodes[i]);
+        const extraElements = [];
+        const extraStyles = [];
         if (nodeResult) {
-          childNodeValues.push(<View>{nodeResult}</View>);
+          if (node.parentNode?.tagName === "ul" && node.tagName === "li") {
+            extraElements.push(
+              <Text
+                style={[
+                  StyleProvider.styles.listItemTextWeak,
+                  { marginTop: 5 }
+                ]}
+              >
+                •
+              </Text>
+            );
+            extraStyles.push({ flexDirection: "row" });
+          }
         }
+        childNodeValues.push(
+          <View style={extraStyles}>
+            {extraElements}
+            <View>{nodeResult}</View>
+          </View>
+        );
       }
       return childNodeValues;
     } else {
       if (node.data.trim().length > 0) {
         if (node.tagName === "xml") return;
-        return <Text style={options?.extraStyles}>{node.data}</Text>;
+        return (
+          <Text
+            style={[StyleProvider.styles.listItemTextWeak, { marginTop: 5 }]}
+          >
+            {node.data}
+          </Text>
+        );
       }
     }
   };
