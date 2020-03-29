@@ -140,6 +140,18 @@ const SpellInfoScreen = (props: SpellInfoScreenProps) => {
                   extraStyles: [StyleProvider.styles.listItemTextWeak]
                 })}
             </View>
+            <View style={[styles.infoItem, styles.rightFloat]}>
+              {spellInfo && (
+                <Text
+                  style={[
+                    StyleProvider.styles.listItemTextWeak,
+                    styles.rightFloat
+                  ]}
+                >
+                  {spellInfo.source}
+                </Text>
+              )}
+            </View>
           </View>
         )}
         {props.extraButtons &&
@@ -209,5 +221,8 @@ const styles = StyleSheet.create({
     borderBottomColor: StyleProvider.styles.listItemDivider.borderColor,
     borderBottomWidth: StyleProvider.styles.listItemDivider.borderWidth,
     borderStyle: StyleProvider.styles.listItemDivider.borderStyle
+  },
+  rightFloat: {
+    alignItems: "flex-end"
   }
 });
