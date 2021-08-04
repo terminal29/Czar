@@ -49,7 +49,7 @@
     "use-memo-one": "^1.1.1",
     "uuidv4": "^6.0.6",
     "xml2js": "^0.4.23",
-    "xmldom": "^0.3.0"
+    "xmldom": "^0.6.0"
   },
   "devDependencies": {
     "@babel/core": "~7.6.0",
